@@ -102,5 +102,5 @@ jobs:
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: AK3-Nameless14-SM8250${{ env.UPLOADNAME }}-${{ env.BUILD_TIME }}
+        name: AK3-Nameless14-SM8250-${{ env.UPLOADNAME }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
