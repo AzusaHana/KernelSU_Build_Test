@@ -33,8 +33,8 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         mkdir clang-aosp
-        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/master-kernel-build-2022/clang-r450784e.tar.gz
-        tar -C clang-aosp/ -zxvf clang-r450784e.tar.gz
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/master/clang-r487747c.tar.gz
+        tar -C clang-aosp/ -zxvf clang-r487747c.tar.gz
     
     - name: Download Gcc-aosp
       run: |
@@ -52,6 +52,7 @@ jobs:
         sed -i 's/ -dirty//g' setlocalversion
         cd $GITHUB_WORKSPACE/patches
         sed -i '1655 r BACKPORT.c' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/fs/namespace.c
+        cp $GITHUB_WORKSPACE/patches/sm8250_defconfig $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/arm64/config/
 
     - name: Setup KernelSU
       run: |
@@ -73,7 +74,7 @@ jobs:
         export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld LLVM=1 LLVM_IAS=1 ${{ env.GCC_64 }} vendor/kona-perf_defconfig vendor/debugfs.config
+        make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld LLVM=1 LLVM_IAS=1 ${{ env.GCC_64 }} sm8250_defconfig
         make -j$(nproc --all) CC="ccache clang" O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld LLVM=1 LLVM_IAS=1 ${{ env.GCC_64 }}
     
     - name: Check a kernel output files
