@@ -52,7 +52,7 @@ jobs:
         sed -i 's/ -dirty//g' setlocalversion
         cd $GITHUB_WORKSPACE/patches
         sed -i '1655 r BACKPORT.c' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/fs/namespace.c
-        cp $GITHUB_WORKSPACE/patches/sm8250_defconfig $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/arm64/config/
+        cp $GITHUB_WORKSPACE/patches/sm8250_defconfig $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/arm64/configs/
 
     - name: Setup KernelSU
       run: |
