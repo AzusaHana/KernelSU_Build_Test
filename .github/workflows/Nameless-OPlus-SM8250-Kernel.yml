@@ -42,7 +42,6 @@ jobs:
           mkdir gcc-64
           wget -O gcc-aarch64.tar.gz https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz
           tar -C gcc-64/ -zxvf gcc-aarch64.tar.gz
-          echo "GCC_64=CROSS_COMPILE=$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin/aarch64-linux-android-" >> $GITHUB_ENV
     
     - name: Download kernel source
       run: |
@@ -52,7 +51,6 @@ jobs:
         sed -i 's/ -dirty//g' setlocalversion
         cd $GITHUB_WORKSPACE/patches
         sed -i '1655 r BACKPORT.c' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/fs/namespace.c
-        cp $GITHUB_WORKSPACE/patches/sm8250_defconfig $GITHUB_WORKSPACE/kernel_workspace/android-kernel/arch/arm64/configs/
 
     - name: Setup KernelSU
       run: |
@@ -60,7 +58,7 @@ jobs:
         rm -rf KernelSU drivers/kernelsu
         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s v0.9.5
         KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
-        echo "UPLOADNAME=KSU_$KSU_VERSION" >> $GITHUB_ENV
+        echo "KSUVER=KSU_$KSU_VERSION" >> $GITHUB_ENV
 
     - name: Setup ccache
       uses: hendrikmuhs/ccache-action@v1.2
@@ -71,11 +69,17 @@ jobs:
     - name: Build kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export BRAND_SHOW_FLAG=oneplus
+        export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin:$PATH
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        make -j$(nproc --all) CC=clang O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld LLVM=1 LLVM_IAS=1 ${{ env.GCC_64 }} sm8250_defconfig
-        make -j$(nproc --all) CC="ccache clang" O=out ARCH=arm64 CLANG_TRIPLE=aarch64-linux-gnu- LD=ld.lld LLVM=1 LLVM_IAS=1 ${{ env.GCC_64 }}
+        BA_CMD="CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android-"
+        EX_CMD="LD=ld.lld LLVM=1 LLVM_IAS=1"
+        DEFCONFIG="vendor/kona-perf_defconfig vendor/debugfs.config"
+        make O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD $DEFCONFIG
+        make -j$(nproc --all) O=out ARCH=arm64 CC="ccache clang" $BA_CMD $EX_CMD
     
     - name: Check a kernel output files
       run: |
@@ -102,12 +106,12 @@ jobs:
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: Image-${{ env.UPLOADNAME }}
+        name: Image-${{ env.KSUVER }}
         path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
 
     - name: Upload AnyKernel3
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: AK3-Nameless14-SM8250-${{ env.UPLOADNAME }}-${{ env.BUILD_TIME }}
+        name: AK3-Nameless14-OPlus-SM8250-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
