@@ -21,7 +21,7 @@ The kernel source used is all from the official ROM authors, and there have been
 2. Using ```adb sideload``` to flash AnyKernel3  
 Reboot to recovery mode and use ```adb sideload AK3-xxx.zip``` to flash AnyKernel3.
 > Tips: If your custom recovery does not support flashing AnyKernel3, please try to flash TWRP or OrangeFox first.
->> OrangeFox: [Oneplus 8 series and 9R](https://xdaforums.com/t/recovery-unofficial-orangefox-recovery-project-oneplus-8-8t-8-pro-9r-22-may-2024.4515657) | [OnePlus 9/9 Pro](https://xdaforums.com/t/recovery-unofficial-a12-a14-orangefox-recovery-project-oneplus-9-9-pro-28-05-2024.4601751)  
+>> OrangeFox: [OnePlus 8 series and 9R](https://xdaforums.com/t/recovery-unofficial-orangefox-recovery-project-oneplus-8-8t-8-pro-9r-22-may-2024.4515657) | [OnePlus 9/9 Pro](https://xdaforums.com/t/recovery-unofficial-a12-a14-orangefox-recovery-project-oneplus-9-9-pro-28-05-2024.4601751)  
 
 3. Using Kernel Flasher to OTA  
 After installing the OTA and before rebooting, use [Kernel Flasher](https://github.com/tiann/KernelFlasher) to flash AnyKernel3 into the other slot.
