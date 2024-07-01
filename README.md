@@ -5,7 +5,7 @@
 For NonGKI devices, the version 0.9.5 (11872) of KernelSU is the last version (version 1.0 no longer supports NonGKI), so don't ask why the KernelSU version is always 11872. However, you can still update the KernelSU manager.
 
 - Kernel Source  
-The kernel source used is all from the official ROM authors, and there have been no modifications except for adding KernelSU
+The kernel source used is all from the official ROM authors, and there have been no modifications except for adding KernelSU.
 
 ## Installation Guide  
 
@@ -21,7 +21,7 @@ The kernel source used is all from the official ROM authors, and there have been
 2. Using ```adb sideload``` to flash AnyKernel3  
 Reboot to recovery mode and use ```adb sideload AK3-xxx.zip``` to flash AnyKernel3.
 > Tips: If your custom recovery does not support flashing AnyKernel3, please try to flash TWRP or OrangeFox first.
->> OrangeFox: [OPlus SM8250](https://github.com/Wishmasterflo/device_oneplus_opkona)  
+>> OrangeFox: [Oneplus 8 series and 9R](https://xdaforums.com/t/recovery-unofficial-orangefox-recovery-project-oneplus-8-8t-8-pro-9r-22-may-2024.4515657) | [OnePlus 9/9 Pro](https://xdaforums.com/t/recovery-unofficial-a12-a14-orangefox-recovery-project-oneplus-9-9-pro-28-05-2024.4601751)  
 
 3. Using Kernel Flasher to OTA  
-After installing the OTA and before rebooting, use Kernel Flasher to flash AnyKernel3 into the other slot.
+After installing the OTA and before rebooting, use [Kernel Flasher](https://github.com/tiann/KernelFlasher) to flash AnyKernel3 into the other slot.
