@@ -12,12 +12,14 @@ The kernel source used is all from the official ROM authors, and there have been
 **Anyway, read the [KernelSU official website](https://kernelsu.org/guide/installation.html) first!!**  
 
 1. Download AnyKernel3 from github action  
+
 **Nameless 14**: [OPlus SM8250 (Chris Chen)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/Nameless-OPlus-SM8250-Kernel.yml) | [OPlus SM8350 (Chandu)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/Nameless-OPlus-SM8350(Chandu)-Kernel.yml) | [OPlus SM8350 (pjgowtham)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/Nameless-OPlus-SM8350(pjgowtham)-Kernel.yml)  
 > Supported Devices:  
 > - OPlus SM8250 (Chris Chen): ```OnePlus 8 | OnePlus 8 Pro | OnePlus 8T | OnePlus 9R```   
 > - OPlus SM8350 (Chandu): ```OnePlus 9 | OnePlus 9 Pro```   
 > - OPlus SM8350 (pjgowtham): ```OnePlus 9RT | realme GT | realme GT 2 | realme GT Master Edition```  
-**PixelOS 14**: [OPlus SM8250 (jef00)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/PixelOS-OPlus-SM8250-Kernel.yml)
+
+**PixelOS 14**: [OPlus SM8250 (jef00)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/PixelOS-OPlus-SM8250-Kernel.yml)  
 > Supported Devices:  
 > - OPlus SM8250 (Chris Chen): ```OnePlus 8 | OnePlus 8 Pro | OnePlus 8T```   
 
