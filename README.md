@@ -21,7 +21,7 @@ The kernel source used is all from the official ROM authors, and there have been
 
 **PixelOS 14**: [OPlus SM8250 (jef00)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/PixelOS-OPlus-SM8250-Kernel.yml)  
 > Supported Devices:  
-> - OPlus SM8250 (Chris Chen): ```OnePlus 8 | OnePlus 8 Pro | OnePlus 8T```   
+> - OPlus SM8250 (jef00): ```OnePlus 8 | OnePlus 8 Pro | OnePlus 8T```   
 
 2. Using ```adb sideload``` to flash AnyKernel3  
 Reboot to recovery mode and use ```adb sideload AK3-xxx.zip``` to flash AnyKernel3.
