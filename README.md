@@ -17,7 +17,7 @@ The kernel source used is all from the official ROM authors, and there have been
 > Supported Devices:  
 > - OPlus SM8250 (Chris Chen): ```OnePlus 8 | OnePlus 8 Pro | OnePlus 8T | OnePlus 9R```   
 > - OPlus SM8350 (Chandu): ```OnePlus 9 | OnePlus 9 Pro```   
-> - OPlus SM8350 (pjgowtham): ```OnePlus 9RT | realme GT | realme GT 2 | realme GT Master Edition```  
+> - OPlus SM8350 (pjgowtham): ```OnePlus 9RT | realme GT | realme GT 2 | realme GT Master Edition (lunaa)```  
 
 **PixelOS 14**: [OPlus SM8250 (jef00)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/PixelOS-OPlus-SM8250-Kernel.yml)  
 > Supported Devices:  
@@ -32,7 +32,7 @@ Reboot to recovery mode and use ```adb sideload AK3-xxx.zip``` to flash AnyKerne
 After installing the OTA and before rebooting, use [Kernel Flasher](https://github.com/tiann/KernelFlasher) to flash AnyKernel3 into the other slot.
 > Tips: If there is not a local update in ROM, please follow step 2 to flash AnyKernel3 after update.
 
-## Original kernel source  
+## Original Kernel Source  
 
 Nameless 14: [OPlus SM8250 (Chris Chen)](https://github.com/Nameless-AOSP-OSS/kernel_oneplus_sm8250) | [OPlus SM8350 (Chandu)](https://github.com/chandu078/android_kernel_oneplus_sm8350) | [OPlus SM8350 (pjgowtham)](https://github.com/pjgowtham/android_kernel_oneplus_sm8350)  
 PixelOS 14: [OPlus SM8250 (jef00)](https://github.com/jef00/kernel_oneplus_sm8250/tree/lineage-21-aosp)  
