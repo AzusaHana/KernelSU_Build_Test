@@ -93,5 +93,5 @@ jobs:
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: AK3-LineageOS21-OPlus-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
+        name: AK3-LineageOS21-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
