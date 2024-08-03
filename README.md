@@ -39,6 +39,6 @@ After installing the OTA and before rebooting, use [Kernel Flasher](https://gith
 
 ## Original Kernel Source  
 
-LineageOS 21: [OPlus SM8250](https://github.com/LineageOS/android_kernel_oneplus_sm8250) | [OPlus SM8550]
+LineageOS 21: [OPlus SM8250](https://github.com/LineageOS/android_kernel_oneplus_sm8250) | [OPlus SM8550](https://github.com/LineageOS/android_kernel_oneplus_sm8550)  
 Nameless 14: [OPlus SM8250 (Chris Chen)](https://github.com/Nameless-AOSP-OSS/kernel_oneplus_sm8250) | [OPlus SM8350 (Chandu)](https://github.com/chandu078/android_kernel_oneplus_sm8350) | [OPlus SM8350 (pjgowtham)](https://github.com/pjgowtham/android_kernel_oneplus_sm8350)  
 PixelOS 14: [OPlus SM8250 (jef00)](https://github.com/jef00/kernel_oneplus_sm8250/tree/lineage-21-aosp)  
