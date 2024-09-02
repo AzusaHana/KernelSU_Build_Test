@@ -46,7 +46,7 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/scripts
         sed -i 's/ -dirty//g' setlocalversion
         cd $GITHUB_WORKSPACE/patches
-        sed -i '/\/\* Now umount can handle mount points as well as block devices\./r path_umount.c' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/fs/namespace.c
+        sed -i '1655 r path_umount.c' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/fs/namespace.c
 
     - name: Setup KernelSU
       run: |
