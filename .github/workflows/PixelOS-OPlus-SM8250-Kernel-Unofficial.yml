@@ -52,9 +52,9 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
+        KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
         rm -rf KernelSU
         git clone --recursive https://github.com/backslashxx/KernelSU -b legacy KernelSU
-        KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
         echo "KSUVER=KSU_$KSU_VERSION" >> $GITHUB_ENV
       
     - name: Build kernel
