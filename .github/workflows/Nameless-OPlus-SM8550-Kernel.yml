@@ -100,11 +100,11 @@ jobs:
     - name: Compress AnyKernel3 folder to zip
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
-        zip -r $GITHUB_WORKSPACE/AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME_1 }}.zip ./*
+        zip -r $GITHUB_WORKSPACE/AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
 
     - name: Define Caption
       run: |
-        CAPTION="- ROM\n*Nameless 14*\n- Device\nOnePlus 11 (Salami)\n- KernelSU\n${{ env.KSUVER }}\n- Build Time\n${{ env.BUILD_TIME }}"
+        CAPTION="- ROM\n*Nameless 14*\n- Device\nOnePlus 11 (Salami)\n- KernelSU\n${{ env.KSUVER }}\n- Build Time\n${{ env.BUILD_TIME_1 }}"
         CAPTION_ENCODED=$(echo "$CAPTION" | jq -sRr @uri)
         echo "CAPTION_ENCODED=$CAPTION_ENCODED" >> $GITHUB_ENV
 
