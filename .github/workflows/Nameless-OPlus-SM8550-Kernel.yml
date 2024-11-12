@@ -21,6 +21,7 @@ jobs:
     - name: Setup build kernel environment
       run: |
         echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%y%m%d")" >> $GITHUB_ENV
+        echo "BUILD_TIME_1=$(TZ=Asia/Shanghai date "+%yy-%m-%d")" >> $GITHUB_ENV
         sudo apt-get update
         sudo apt-get install git dwarves libelf-dev ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python2 python3
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
@@ -96,19 +97,23 @@ jobs:
         name: AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
 
-    - name: Send AK3 to Telegram
-      if: env.CHECK_IMAGE == 'true'
-      env:
-          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+    - name: Compress AnyKernel3 folder to zip
       run: |
-          cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
-          zip -r ../AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
-          cd $GITHUB_WORKSPACE/kernel_workspace
-          if [ -f "AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" ]; then
-            curl -F chat_id="$TELEGRAM_CHANNEL_ID" \
-                 -F document=@"AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" \
-                 "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument"
-          else
-            echo "Compressed file not found."
-          fi
+        cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
+        zip -r $GITHUB_WORKSPACE/AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME_1 }}.zip ./*
+
+    - name: Define Caption
+      run: |
+        CAPTION="- ROM\n*Nameless 14*\n- Device\nOnePlus 11 (Salami)\n- KernelSU\n${{ env.KSUVER }}\n- Build Time\n${{ env.BUILD_TIME }}"
+        CAPTION_ENCODED=$(echo "$CAPTION" | jq -sRr @uri)
+        echo "CAPTION_ENCODED=$CAPTION_ENCODED" >> $GITHUB_ENV
+
+    - name: Send AnyKernel3 to Telegram
+      env:
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        CAPTION_ENCODED: ${{ env.CAPTION_ENCODED }}
+      run: |
+        # 使用 Telegram Bot API 发送压缩文件
+        curl -v "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument?chat_id=$TELEGRAM_CHAT_ID&caption=$CAPTION_ENCODED&parse_mode=Markdown" \
+            -F document="@$GITHUB_WORKSPACE/AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip"
