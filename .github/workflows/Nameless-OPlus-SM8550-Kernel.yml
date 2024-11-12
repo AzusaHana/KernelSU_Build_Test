@@ -106,7 +106,7 @@ jobs:
           zip -r ../AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
           cd $GITHUB_WORKSPACE/kernel_workspace
           if [ -f "AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" ]; then
-            curl -F chat_id="$TELEGRAM_CHAT_ID" \
+            curl -F chat_id="$TELEGRAM_CHANNEL_ID" \
                  -F document=@"AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" \
                  "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument"
           else
