@@ -95,3 +95,20 @@ jobs:
       with:
         name: AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
+
+    - name: Send AK3 to Telegram
+      if: env.CHECK_IMAGE == 'true'
+      env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+      run: |
+          cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
+          zip -r ../AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
+          cd $GITHUB_WORKSPACE/kernel_workspace
+          if [ -f "AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" ]; then
+            curl -F chat_id="$TELEGRAM_CHAT_ID" \
+                 -F document=@"AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" \
+                 "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument"
+          else
+            echo "Compressed file not found."
+          fi
