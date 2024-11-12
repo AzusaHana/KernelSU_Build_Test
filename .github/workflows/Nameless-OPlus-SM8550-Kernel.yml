@@ -104,16 +104,13 @@ jobs:
 
     - name: Define Caption
       run: |
-        CAPTION="- ROM\n*Nameless 14*\n- Device\nOnePlus 11 (Salami)\n- KernelSU\n${{ env.KSUVER }}\n- Build Time\n${{ env.BUILD_TIME_1 }}"
-        CAPTION_ENCODED=$(echo "$CAPTION" | jq -sRr @uri)
-        echo "CAPTION_ENCODED=$CAPTION_ENCODED" >> $GITHUB_ENV
+        echo "CAPTION=- ROM\n*Nameless 14*\n- Device\nOnePlus 11 (Salami)\n- KernelSU\n${{ env.KSUVER }}\n- Build Time\n${{ env.BUILD_TIME_1 }}" >> $GITHUB_ENV
 
     - name: Send AnyKernel3 to Telegram
       env:
         TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
-        CAPTION_ENCODED: ${{ env.CAPTION_ENCODED }}
+        CAPTION: ${{ env.CAPTION }}
       run: |
-        # 使用 Telegram Bot API 发送压缩文件
-        curl -v "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendDocument?chat_id=$TELEGRAM_CHAT_ID&caption=$CAPTION_ENCODED&parse_mode=Markdown" \
-            -F document="@$GITHUB_WORKSPACE/AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip"
+        curl -v "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID&media=%5B%7B%22type%22%3A%22document%22%2C%20%22media%22%3A%22attach%3A%2F%2Ffile1%22%2C%22caption%22%3A%22$CAPTION%22%7D%5D" \
+            -F file1="@$GITHUB_WORKSPACE/AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip"
