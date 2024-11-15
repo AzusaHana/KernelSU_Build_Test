@@ -21,7 +21,7 @@ jobs:
     - name: Setup build kernel environment
       run: |
         echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%y%m%d")" >> $GITHUB_ENV
-        echo "BUILD_TIME_1=$(TZ=Asia/Shanghai date "+%Y%m%d")" >> $GITHUB_ENV
+        echo "BUILD_TIME_1=$(TZ=Asia/Shanghai date "+%Y-%m-%d")" >> $GITHUB_ENV
         sudo apt-get update
         sudo apt-get install git dwarves libelf-dev ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libbz2-1.0 libghc-bzlib-dev squashfs-tools pngcrush schedtool dpkg-dev liblz4-tool make optipng maven libssl-dev pwgen libswitch-perl policycoreutils minicom libxml-sax-base-perl libxml-simple-perl bc libc6-dev-i386 lib32ncurses5-dev libx11-dev lib32z-dev libgl1-mesa-dev xsltproc unzip device-tree-compiler python2 python3
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
@@ -107,7 +107,20 @@ jobs:
         TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
       run: |
-        caption="ROM:\nNameless 14\nDevice:\nOnePlus 11 (Salami)\nKernelSU:\n${{ env.KSUVER }}\nBuild Time:\n${{ env.BUILD_TIME }}\nChange log:\nUpdate KernelSU source"
-        curl -v "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID&media=[{\"type\":\"document\",\"media\":\"attach://file1\",\"caption\":\"$caption\"}]" \
+        caption="ROM:
+        *Nameless 14*
+        Device:
+        OnePlus 11 (Salami)
+        KernelSU:
+        Official-${{ env.KSUVER }}
+        Build Time:
+        ${{ env.BUILD_TIME }}
+        Change log:
+        Waiting for editing...
+        
+        https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        json_payload=$(jq -n --arg caption "$caption" '[{"type":"document","media":"attach://file1","caption":$caption,parse_mode:"Markdown"}]')
+        url_encoded_payload=$(echo $json_payload | jq -sRr @uri)
+        curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID&media=$url_encoded_payload" \
         -F file1="@$GITHUB_WORKSPACE/AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip"
 
