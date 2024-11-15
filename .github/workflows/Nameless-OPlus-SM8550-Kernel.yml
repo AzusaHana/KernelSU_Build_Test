@@ -116,9 +116,9 @@ jobs:
         Build Time:
         ${{ env.BUILD_TIME }}
         Change log:
-        Waiting for editing...
+        Waiting for editing
         
-        https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        [Github Action](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
         json_payload=$(jq -n --arg caption "$caption" '[{"type":"document","media":"attach://file1","caption":$caption,parse_mode:"Markdown"}]')
         url_encoded_payload=$(echo $json_payload | jq -sRr @uri)
         curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID&media=$url_encoded_payload" \
