@@ -45,7 +45,7 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
         KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
-        echo "KSUVER=KSU_$KSU_VERSION" >> $GITHUB_ENV
+        echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
       
     - name: Build kernel
       run: |
@@ -87,40 +87,28 @@ jobs:
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: Image-${{ env.KSUVER }}
+        name: Image-KSU_${{ env.KSUVER }}
         path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
 
     - name: Upload AnyKernel3
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
+        name: AK3-Nameless-Salami-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
 
     - name: Compress AnyKernel3 folder to zip
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
-        zip -r $GITHUB_WORKSPACE/AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
+        zip -r $GITHUB_WORKSPACE/AK3-Nameless-Salami-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
 
     - name: Send AnyKernel3 to Telegram
       env:
         TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
       run: |
-        caption="ROM:
-        *Nameless 14*
-        Device:
-        OnePlus 11 (Salami)
-        KernelSU:
-        Official-${{ env.KSUVER }}
-        Build Time:
-        ${{ env.BUILD_TIME }}
-        Change log:
-        Waiting for editing
-        
-        [Github Action](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-        json_payload=$(jq -n --arg caption "$caption" '[{"type":"document","media":"attach://file1","caption":$caption,parse_mode:"Markdown"}]')
-        url_encoded_payload=$(echo $json_payload | jq -sRr @uri)
-        curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID&media=$url_encoded_payload" \
-        -F file1="@$GITHUB_WORKSPACE/AK3-Nameless-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip"
+        caption="ROM:\n*Nameless 14*\nDevice:\nOnePlus 11 (Salami)\nKernelSU:\nOfficial-${{ env.KSUVER }}\nBuild Time:\n${{ env.BUILD_TIME_1 }}\nChange Log:\nWaiting for editing\n\n[Github Action](https://github.com/AzusaHana/KernelSU_Build_Test/actions/runs/11855190470)"
+        curl -v "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
+            -F "media=[{\"type\":\"document\",\"media\":\"attach://file1\",\"caption\":\"$caption\",\"parse_mode\":\"Markdown\"}]" \
+            -F file1="@$GITHUB_WORKSPACE/AK3-Nameless-Salami-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip"
 
