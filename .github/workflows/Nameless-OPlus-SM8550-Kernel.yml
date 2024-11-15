@@ -107,8 +107,19 @@ jobs:
         TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
       run: |
-        caption="ROM:\n*Nameless 14*\nDevice:\nOnePlus 11 (Salami)\nKernelSU:\nOfficial-${{ env.KSUVER }}\nBuild Time:\n${{ env.BUILD_TIME_1 }}\nChange Log:\nWaiting for editing\n\n[Github Action](https://github.com/AzusaHana/KernelSU_Build_Test/actions/runs/11855190470)"
+        caption="\
+        ROM:<blockquote><b>Nameless 14</b></blockquote>
+        Device:<blockquote>OnePlus 11 (Salami)</blockquote>
+        KernelSU:<blockquote>Official-${{ env.KSUVER }}</blockquote>
+        Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
+        Change Log:<blockquote>Waiting for editing...</blockquote>
+        
+        <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Github Action</a>"
+        media=$(jq -n \
+          --arg media "attach://file1" \
+          --arg caption "$caption" \
+          '{type: "document", media: $media, caption: $caption, parse_mode: "HTML"}')
         curl -v "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
-            -F "media=[{\"type\":\"document\",\"media\":\"attach://file1\",\"caption\":\"$caption\",\"parse_mode\":\"Markdown\"}]" \
+            -F "media=[$media]" \
             -F file1="@$GITHUB_WORKSPACE/AK3-Nameless-Salami-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip"
 
