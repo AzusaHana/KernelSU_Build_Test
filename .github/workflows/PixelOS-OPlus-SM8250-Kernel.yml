@@ -178,13 +178,13 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
       run: |
         caption1="\
-        ROM:<blockquote><b>Nameless 14</b></blockquote>
+        ROM:<blockquote><b>PixelOS 14</b></blockquote>
         Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T</blockquote>
         KernelSU:<blockquote><a href=\"https://github.com/tiann/KernelSU/tree/v0.9.5\">Official-${{ env.KSUVER }}</a></blockquote>
         Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
         Change Log:<blockquote>Waiting for editing...</blockquote>"
         caption2="\
-        ROM:<blockquote><b>Nameless 14</b></blockquote>
+        ROM:<blockquote><b>PixelOS 14</b></blockquote>
         Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T</blockquote>
         KernelSU:<blockquote><a href=\"https://github.com/rsuntk/KernelSU\">Unofficial-${{ env.KSUVER_1 }}</a></blockquote>
         Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
