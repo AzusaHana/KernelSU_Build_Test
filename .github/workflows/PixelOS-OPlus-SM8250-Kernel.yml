@@ -182,13 +182,15 @@ jobs:
         Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T</blockquote>
         KernelSU:<blockquote><a href=\"https://github.com/tiann/KernelSU/tree/v0.9.5\">Official-${{ env.KSUVER }}</a></blockquote>
         Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
-        Change Log:<blockquote>Waiting for editing...</blockquote>"
+        Special Note:<blockquote>The official version should install <a href=\"https://t.me/KernelSU_group/3234/290349\">manager 11948</a> or below</blockquote>
+        Change Log:<blockquote>Pending edits... or none</blockquote>"
         caption2="\
         ROM:<blockquote><b>PixelOS 14</b></blockquote>
         Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T</blockquote>
         KernelSU:<blockquote><a href=\"https://github.com/rsuntk/KernelSU\">Unofficial-${{ env.KSUVER_1 }}</a></blockquote>
         Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
-        Change Log:<blockquote>Waiting for editing...</blockquote>
+        Special Note:<blockquote>The unofficial version should install an <a href=\"https://github.com/rsuntk/KernelSU/releases\">unofficial manager</a></blockquote>
+        Change Log:<blockquote>Pending edits... or none</blockquote>
         
         <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Github Action</a>"
         media=$(jq -n \
