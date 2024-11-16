@@ -198,7 +198,7 @@ jobs:
           --arg caption2 "$caption2" \
           '[{type: "document", media: $media1, caption: $caption1, parse_mode: "HTML"},
             {type: "document", media: $media2, caption: $caption2, parse_mode: "HTML"}]')
-        curl -v "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
-            -F "media=[$media]" \
+        curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
+            -F "media=$media" \
             -F official="@$GITHUB_WORKSPACE/AK3-PixelOS-OPlus-SM8250-Official-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" \
             -F unofficial="@$GITHUB_WORKSPACE/AK3-PixelOS-OPlus-SM8250-Unofficial-KSU_${{ env.KSUVER_1 }}-${{ env.BUILD_TIME }}.zip"
