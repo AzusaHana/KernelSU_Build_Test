@@ -31,9 +31,8 @@ jobs:
       run: |
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
         cd $GITHUB_WORKSPACE/kernel_workspace
-        repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b refs/heads/oneplus/sm8650
-        mv $GITHUB_WORKSPACE/patches/op12_v.xml $GITHUB_WORKSPACE/kernel_workspace/.repo/manifests
-        repo init -m op12_v.xml
+        repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b refs/heads/oneplus/sm8650 -m oneplus12_v.xml
+        mv $GITHUB_WORKSPACE/patches/op12_v.xml $GITHUB_WORKSPACE/kernel_workspace/.repo/manifests/oneplus12_v.xml
         repo sync
 
     - name: Build kernel
