@@ -16,6 +16,13 @@ jobs:
         git config --global user.name "AzusaHana"
         git config --global user.email "chenyue2330@gmail.com"
 
+    - name: Clean up disk space
+      run: |
+        sudo apt-get clean
+        sudo rm -rf /usr/share/dotnet /etc/mysql /var/lib/mysql
+        sudo rm -rf /usr/local/lib/android
+        df -h
+
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -31,8 +38,7 @@ jobs:
       run: |
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
         cd $GITHUB_WORKSPACE/kernel_workspace
-        repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b refs/heads/oneplus/sm8650 -m oneplus12_v.xml
-        mv $GITHUB_WORKSPACE/patches/op12_v.xml $GITHUB_WORKSPACE/kernel_workspace/.repo/manifests/oneplus12_v.xml
+        repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b refs/heads/oneplus/sm8650 -m oneplus12_v.xml --depth=1
         repo sync
 
     - name: Build kernel
@@ -41,7 +47,7 @@ jobs:
         ./kernel_platform/oplus/build/oplus_build_kernel.sh pineapple gki
 
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: kernel-build-artifacts
+        name: Image
         path: kernel_workspace/kernel_platform/out/msm-kernel-pineapple-gki/dist/Image
