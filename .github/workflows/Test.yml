@@ -1,10 +1,7 @@
 name: Test
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -30,18 +27,22 @@ jobs:
         chmod a+x ~/repo
         sudo mv ~/repo /usr/local/bin/repo
 
-    - name: Initialize repo
+    - name: Initialize repo and sync
       run: |
-        repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b refs/heads/oneplus/sm8650 -m oneplus12_v.xml
-
-    - name: Sync repo
-      run: repo sync
+        mkdir -p $GITHUB_WORKSPACE/kernel_workspace
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b refs/heads/oneplus/sm8650
+        mv $GITHUB_WORKSPACE/patches/op12_v.xml $GITHUB_WORKSPACE/kernel_workspace/.repo/manifests
+        repo init -m op12_v.xml
+        repo sync
 
     - name: Build kernel
-      run: ./kernel_platform/oplus/build/oplus_build_kernel.sh pineapple gki
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        ./kernel_platform/oplus/build/oplus_build_kernel.sh pineapple gki
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v3
       with:
         name: kernel-build-artifacts
-        path: ./out/*
+        path: $GITHUB_WORKSPACE/kernel_workspace/out/*
