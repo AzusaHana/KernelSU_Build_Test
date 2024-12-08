@@ -3,10 +3,10 @@
   <remote fetch="https://git.codelinaro.org/clo/la" name="clo-la"/>
   <default remote="clo-la" revision="dummy_revision" sync-c="true" sync-tags="false"/>
   <remote fetch="https://github.com/OnePlusOSS" name="origin"/>
-  <project remote="origin" name="android_kernel_common_oneplus_sm8650" path="kernel_platform/common" revision="oneplus/sm8650_v_15.0.0_oneplus12 clone-depth="1"">
+  <project remote="origin" name="android_kernel_common_oneplus_sm8650" path="kernel_platform/common" revision="oneplus/sm8650_v_15.0.0_oneplus12" clone-depth="1">
     <linkfile dest="kernel_platform/.source_date_epoch_dir" src="."/>
   </project>
-  <project remote="origin" name="android_kernel_oneplus_sm8650" path="kernel_platform/msm-kernel" revision="oneplus/sm8650_v_15.0.0_oneplus12 clone-depth="1"">
+  <project remote="origin" name="android_kernel_oneplus_sm8650" path="kernel_platform/msm-kernel" revision="oneplus/sm8650_v_15.0.0_oneplus12" clone-depth="1">
     <linkfile dest="kernel_platform/WORKSPACE" src="bazel.WORKSPACE"/>
     <linkfile dest="kernel_platform/build_with_bazel.py" src="build_with_bazel.py"/>
   </project>
