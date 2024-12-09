@@ -41,13 +41,24 @@ jobs:
         repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b refs/heads/oneplus/sm8650 -m oneplus12_v.xml --depth=1
         repo sync
 
+    - name: Set up KernelSU
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/kernel_platform/msm-kernel
+        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
+
     - name: Build kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         ./kernel_platform/oplus/build/oplus_build_kernel.sh pineapple gki
 
-    - name: Upload build artifacts
+    - name: Upload kernel Image
       uses: actions/upload-artifact@v4
       with:
         name: Image
         path: kernel_workspace/kernel_platform/out/msm-kernel-pineapple-gki/dist/Image
+
+   - name: Upload boot.img
+      uses: actions/upload-artifact@v4
+      with:
+        name: boot.img
+        path: kernel_workspace/kernel_platform/out/msm-kernel-pineapple-gki/dist/boot.img
