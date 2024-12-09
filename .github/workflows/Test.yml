@@ -57,7 +57,7 @@ jobs:
         name: Image
         path: kernel_workspace/kernel_platform/out/msm-kernel-pineapple-gki/dist/Image
 
-   - name: Upload boot
+    - name: Upload boot
       uses: actions/upload-artifact@v4
       with:
         name: boot
