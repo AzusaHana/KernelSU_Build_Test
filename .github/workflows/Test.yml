@@ -45,6 +45,9 @@ jobs:
       run: |
         cd kernel_workspace/kernel_platform/common
         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
+        git submodule add https://github.com/tiann/KernelSU.git ./KernelSU
+        git submodule update --init --recursive
+        git submodule update --remote
 
     - name: Build kernel
       run: |
