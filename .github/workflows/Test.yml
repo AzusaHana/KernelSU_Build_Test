@@ -44,9 +44,9 @@ jobs:
     - name: Set up KernelSU
       run: |
         cd kernel_workspace/kernel_platform/common
-        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
-        cd ../msm-kernel
-        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
+        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
+        cd KernelSU/kernel
+        sed -i '/# .git is a text file while the module is imported by '\''git submodule add'\''./,/^endif$/c\# hardcode!\n$(eval KSU_VERSION=11986)\n$(info -- KernelSU version: $(KSU_VERSION))\nccflags-y += -DKSU_VERSION=$(KSU_VERSION)' Makefile
 
     - name: Build kernel
       run: |
