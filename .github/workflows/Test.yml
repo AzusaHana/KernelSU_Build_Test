@@ -45,7 +45,7 @@ jobs:
       run: |
         cd kernel_workspace/kernel_platform/common
         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
-        cd kernel_workspace/kernel_platform/msm-kernel
+        cd ../msm-kernel
         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
 
     - name: Build kernel
