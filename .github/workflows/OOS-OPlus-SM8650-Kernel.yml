@@ -1,4 +1,4 @@
-name: Test
+name: OOS OPlus SM8650 Kernel
 
 on:
   workflow_dispatch:
@@ -44,9 +44,9 @@ jobs:
     - name: Set up KernelSU
       run: |
         cd kernel_workspace/kernel_platform/common
-        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -
-        cd KernelSU/kernel
-        sed -i '/# .git is a text file while the module is imported by '\''git submodule add'\''./,/^endif$/c\# hardcode!\n$(eval KSU_VERSION=11986)\n$(info -- KernelSU version: $(KSU_VERSION))\nccflags-y += -DKSU_VERSION=$(KSU_VERSION)' Makefile
+        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
+        cd KernelSU
+        curl -o kernel/Makefile "https://raw.githubusercontent.com/tiann/KernelSU/e9072139566d1b84db0a3f7c93bdbff9a59197e4/kernel/Makefile"
 
     - name: Build kernel
       run: |
@@ -62,17 +62,17 @@ jobs:
     - name: Upload AnyKernel3
       uses: actions/upload-artifact@v4
       with:
-        name: AnyKernel3-Test
+        name: AnyKernel3-OOS-OPlus12-V
         path: ./AnyKernel3/*
 
     - name: Upload kernel Image
       uses: actions/upload-artifact@v4
       with:
-        name: Image
+        name: Image-OOS-OPlus12-V
         path: kernel_workspace/kernel_platform/out/msm-kernel-pineapple-gki/dist/Image
 
     - name: Upload boot.img
       uses: actions/upload-artifact@v4
       with:
-        name: boot.img
+        name: boot-OOS-OPlus12-V.img
         path: kernel_workspace/kernel_platform/out/msm-kernel-pineapple-gki/dist/boot.img
