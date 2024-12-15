@@ -1,4 +1,4 @@
-name: OOS OPlus SM8650 Kernel
+name: OSS OPlus SM8650 Kernel
 
 on:
   workflow_dispatch:
@@ -62,17 +62,17 @@ jobs:
     - name: Upload AnyKernel3
       uses: actions/upload-artifact@v4
       with:
-        name: AnyKernel3-OOS-OPlus12-V
+        name: AnyKernel3-OSS-OPlus12-V
         path: ./AnyKernel3/*
 
     - name: Upload kernel Image
       uses: actions/upload-artifact@v4
       with:
-        name: Image-OOS-OPlus12-V
+        name: Image-OSS-OPlus12-V
         path: kernel_workspace/kernel_platform/out/msm-kernel-pineapple-gki/dist/Image
 
     - name: Upload boot.img
       uses: actions/upload-artifact@v4
       with:
-        name: boot-OOS-OPlus12-V.img
+        name: boot-OSS-OPlus12-V.img
         path: kernel_workspace/kernel_platform/out/msm-kernel-pineapple-gki/dist/boot.img
