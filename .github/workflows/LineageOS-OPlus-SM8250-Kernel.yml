@@ -101,14 +101,14 @@ jobs:
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: Image-Official-KSU_${{ env.KSUVER }}
+        name: Image-LOS21-OPlus-SM8250-Official-KSU_${{ env.KSUVER }}
         path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
 
     - name: Upload AnyKernel3
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: AK3-LineageOS-OPlus-SM8250-Official-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}
+        name: AK3-LOS21-OPlus-SM8250-Official-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
 
     - name: Setup unofficial KernelSU
@@ -157,12 +157,12 @@ jobs:
       if: env.CHECK_IMAGE_1 == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: Image-Unofficial-KSU_${{ env.KSUVER_1 }}
+        name: Image-LOS21-OPlus-SM8250-Unofficial-KSU_${{ env.KSUVER_1 }}
         path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
 
     - name: Upload AnyKernel3
       if: env.CHECK_IMAGE_1 == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: AK3-LineageOS-OPlus-SM8250-Unofficial-KSU_${{ env.KSUVER_1 }}-${{ env.BUILD_TIME }}
+        name: AK3-LOS21-OPlus-SM8250-Unofficial-KSU_${{ env.KSUVER_1 }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
