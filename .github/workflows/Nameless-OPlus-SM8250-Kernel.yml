@@ -178,7 +178,7 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
       run: |
         caption1="\
-        <blockquote><a href=\"https://github.com/tiann/KernelSU/tree/v0.9.5\"><b>Official</b>-${{ env.KSUVER }}</a></blockquote>
+        <blockquote><a href=\"https://github.com/tiann/KernelSU/tree/v0.9.5\"><b>Official</b>-${{ env.KSUVER }}</a></blockquote>"
         caption2="\
         <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial</b>-${{ env.KSUVER_1 }}</a></blockquote>
         
