@@ -1,4 +1,4 @@
-name: Build Nameless OPlus SM8350(pjgowtham) Kernel
+name: Build LineageOS Unofficial OPlus SM8350 (pjgowtham) Kernel
 
 on:
   workflow_dispatch:
@@ -40,13 +40,13 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         mkdir clang-aosp
-        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/master/clang-r498229b.tar.gz
-        tar -C clang-aosp/ -zxvf clang-r498229b.tar.gz
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r522817.tar.gz
+        tar -C clang-aosp/ -zxvf clang-r522817.tar.gz
     
     - name: Download kernel source
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone --recursive https://github.com/pjgowtham/android_kernel_oneplus_sm8350 -b lineage-21 android-kernel --depth=1
+        git clone --recursive https://github.com/pjgowtham/android_kernel_oneplus_sm8350 -b lineage-22.1 android-kernel --depth=1
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/scripts
         sed -i 's/ -dirty//g' setlocalversion
         cd $GITHUB_WORKSPACE/patches
@@ -105,7 +105,7 @@ jobs:
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: AK3-Nameless14-OPlus-SM8350(pjgowtham)-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
+        name: AK3-LOS22.1-Unofficial-OPlus-SM8350(pjgowtham)-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
 
     - name: Build kernel for lunaa
@@ -151,5 +151,5 @@ jobs:
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: AK3-Nameless14-lunaa(pjgowtham)-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
+        name: AK3-LOS22.1-Unofficial-lunaa(pjgowtham)-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
