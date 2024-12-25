@@ -1,13 +1,17 @@
 # KernelSU_Build_Test  
 
-## Improtant Things
-- Official KernelSU  
-For **NonGKI** devices, the last officially supported version of KernelSU is **0.9.5 (11872)** (versions 1.0 and later no longer support NonGKI). So, please stop asking why the KernelSU version is always 11872.  
-For NonGKI devices with the **4.19 kernel**, only version **1.0.1 (11948)** or earlier of the official KernelSU manager is supported.   
-For NonGKI devices with the 5.4 kernel, the latest version of the official KernelSU manager is currently supported.
+## Important Things
 
-- Kernel Source  
-The kernel source used is entirely from the official ROM authors, with no modifications made except for the addition of KernelSU.
+### Official KernelSU
+- For **NonGKI** devices, the last officially supported version of KernelSU is **0.9.5 (11872)**.  
+  *(Versions 1.0 and later no longer support NonGKI, so please stop asking why the KernelSU version is always 11872.)*
+- Device-specific notes:
+  - **4.19 Kernel:** Only **version 1.0.1 (11948)** or earlier of the official KernelSU manager is supported.
+  - **5.4 Kernel:** The latest version of the official KernelSU manager is currently supported.
+
+### Kernel Source
+- The kernel source is entirely from the official ROM authors.  
+- The only modification is the addition of KernelSU.
 
 ## Installation Guide  
 
