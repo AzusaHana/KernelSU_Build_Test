@@ -123,7 +123,7 @@ jobs:
     - name: add get_cred_rcu
       run: |
         cd $GITHUB_WORKSPACE/patches
-        sed -i '260 r get_cred_rcu' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/include/linux/cred.h
+        sed -i '260 r get_cred_rcu.h' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/include/linux/cred.h
         sed -i 's/atomic_inc_not_zero(&((struct cred \*)cred)->usage)/get_cred_rcu(cred)/g' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cred.c
 
     - name: Build kernel with unofficial KernelSU
