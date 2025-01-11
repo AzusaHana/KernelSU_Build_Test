@@ -29,22 +29,22 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         mkdir clang-aosp
-        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main-kernel-build-2023/clang-r487747c.tar.gz
-        tar -C clang-aosp/ -zxvf clang-r487747c.tar.gz
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r522817.tar.gz
+        tar -C clang-aosp/ -zxvf clang-r522817.tar.gz
     
     - name: Download kernel source
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone --recursive https://github.com/LineageOS/android_kernel_oneplus_sm8550 -b lineage-21 android-kernel --depth=1
+        git clone --recursive https://github.com/LineageOS/android_kernel_oneplus_sm8550 -b lineage-22.1 android-kernel --depth=1
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/scripts
         sed -i 's/ -dirty//g' setlocalversion
 
-    - name: Setup KernelSU
+    - name: Setup official KernelSU
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
         KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
-        echo "KSUVER=KSU_$KSU_VERSION" >> $GITHUB_ENV
+        echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
       
     - name: Build kernel
       run: |
@@ -81,17 +81,86 @@ jobs:
         git clone https://github.com/Kernel-SU/AnyKernel3 --depth=1
         rm -rf AnyKernel3/.git
         cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
-    
+
+    - name: Compress AnyKernel3 with official KernelSU folder to zip
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
+        zip -r $GITHUB_WORKSPACE/AK3-LOS22.1-Salami-Official-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
+  
     - name: Upload Image
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: Image-${{ env.KSUVER }}
+        name: Image-Official-KSU_${{ env.KSUVER }}
         path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
 
     - name: Upload AnyKernel3
       if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v4
       with:
-        name: AK3-LineageOS21-Salami-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
+        name: AK3-LOS22.1-Salami-Official-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}
+        path: kernel_workspace/AnyKernel3/*
+
+    - name: Setup unofficial KernelSU
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        rm -rf KernelSU
+        git clone --recursive https://github.com/5ec1cff/KernelSU -b main KernelSU
+        KSU_VERSION_1=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
+        echo "KSUVER_1=$KSU_VERSION_1" >> $GITHUB_ENV
+
+    - name: Build kernel
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        rm -rf out/arch/arm64/boot/Image
+        LTO=thin
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export HEADER_ARCH=arm64
+        export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH
+        export KBUILD_BUILD_HOST=Github-Action
+        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        AR_CMD="ARCH=${ARCH} SUBARCH=${SUBARCH} HEADER_ARCH=${HEADER_ARCH}"
+        BA_CMD="CC=clang CXX=clang++"
+        EX_CMD="LD=ld.lld AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump READELF=llvm-readelf OBJSIZE=llvm-size STRIP=llvm-strip LLVM=1 LLVM_IAS=1"
+        DEFCONFIG="gki_defconfig vendor/kalama_GKI.config vendor/oplus/kalama_GKI.config vendor/debugfs.config vendor/oplus/salami.config"
+        make O=out $AR_CMD $BA_CMD $EX_CMD $DEFCONFIG
+        scripts/config --file out/.config -e LTO_CLANG -d LTO_NONE -e LTO_CLANG_THIN -d LTO_CLANG_FULL -e THINLTO
+        make -j$(nproc --all) O=out $AR_CMD $BA_CMD $EX_CMD
+
+    - name: Check a kernel output files
+      run: |
+       cd $GITHUB_WORKSPACE/kernel_workspace
+       if [ -f android-kernel/out/arch/arm64/boot/Image ]; then
+           echo "CHECK_IMAGE_1=true" >> $GITHUB_ENV
+       else
+           echo "Kernel output file is empty"
+           exit 1
+       fi
+      
+    - name: Make Anykernel3
+      if: env.CHECK_IMAGE_1 == 'true'
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        git clone https://github.com/Kernel-SU/AnyKernel3 --depth=1
+        rm -rf AnyKernel3/.git
+        cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
+
+    - name: Compress AnyKernel3 with official KernelSU folder to zip
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
+        zip -r $GITHUB_WORKSPACE/AK3-LOS22.1-Salami-Unofficial-KSU_${{ env.KSUVER_1 }}-${{ env.BUILD_TIME }}.zip ./*
+  
+    - name: Upload Image
+      if: env.CHECK_IMAGE_1 == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: Image-Unofficial-KSU_${{ env.KSUVER_1 }}
+        path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
+
+    - name: Upload AnyKernel3
+      if: env.CHECK_IMAGE_1 == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: AK3-LOS22.1-Salami-Unofficial-KSU_${{ env.KSUVER_1 }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
