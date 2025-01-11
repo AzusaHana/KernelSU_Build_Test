@@ -142,8 +142,7 @@ jobs:
       if: env.CHECK_IMAGE_1 == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone https://github.com/Kernel-SU/AnyKernel3 --depth=1
-        rm -rf AnyKernel3/.git
+        rm -rf AnyKernel3/Image
         cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
 
     - name: Compress AnyKernel3 with official KernelSU folder to zip
