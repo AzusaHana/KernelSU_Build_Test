@@ -39,14 +39,14 @@ jobs:
         mkdir kernel_workspace && cd kernel_workspace
         repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b refs/heads/oneplus/sm8650 -m oneplus12_v.xml --depth=1
         repo sync
-        rm kernel_platform/common/android/abi_gki_protected_exports_* || echo "No protected exports!"
 
-    - name: Set up KernelSU
+    - name: Make working directory clean to avoid dirty
       run: |
         cd kernel_workspace/kernel_platform/common
+        rm android/abi_gki_protected_exports_* || echo "No protected exports!"
         curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
-        cd KernelSU
-        curl -o kernel/Makefile "https://raw.githubusercontent.com/tiann/KernelSU/e9072139566d1b84db0a3f7c93bdbff9a59197e4/kernel/Makefile"
+        git add -A && git commit -a -m "Add KernelSU"
+        repo status
 
     - name: Build kernel
       run: |
