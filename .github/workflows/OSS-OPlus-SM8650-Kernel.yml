@@ -40,11 +40,31 @@ jobs:
         repo init -u https://github.com/OnePlusOSS/kernel_manifest.git -b refs/heads/oneplus/sm8650 -m oneplus12_v.xml --depth=1
         repo sync
 
+    - name: Setup KernelSU
+      run: |
+        cd $GITHUB_WORKSPACE
+        git clone https://github.com/tiann/KernelSU
+        cd kernel_platform
+        GKI_ROOT=$(pwd)
+        ln -sf $GITHUB_WORKSPACE/KernelSU/kernel $GKI_ROOT/common/drivers/kernelsu
+        DRIVER_MAKEFILE=$GKI_ROOT/common/drivers/Makefile
+        DRIVER_KCONFIG=$GKI_ROOT/common/drivers/Kconfig
+        grep -q "kernelsu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_KSU) += kernelsu/\n" >> "$DRIVER_MAKEFILE"
+        grep -q "kernelsu" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\\source \"drivers/kernelsu/Kconfig\"" "$DRIVER_KCONFIG"
+        if [ ! -e build/build.sh ]; then
+          GLIBC_VERSION=$(ldd --version 2>/dev/null | head -n 1 | awk '{print $NF}')
+          echo "GLIBC_VERSION: $GLIBC_VERSION"
+          if [ "$(printf '%s\n' "2.38" "$GLIBC_VERSION" | sort -V | head -n1)" = "2.38" ]; then
+            echo "Patching resolve_btfids/Makefile"
+            cd $GKI_ROOT/common/ && sed -i '/\$(Q)\$(MAKE) -C \$(SUBCMD_SRC) OUTPUT=\$(abspath \$(dir \$@))\/ \$(abspath \$@)/s//$(Q)$(MAKE) -C $(SUBCMD_SRC) EXTRA_CFLAGS="$(CFLAGS)" OUTPUT=$(abspath $(dir $@))\/ $(abspath $@)/' tools/bpf/resolve_btfids/Makefile || echo "No patch needed."
+          fi
+        fi
+        repo status
+        
     - name: Make working directory clean to avoid dirty
       run: |
         cd kernel_workspace/kernel_platform/common
         rm android/abi_gki_protected_exports_* || echo "No protected exports!"
-        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
         git add -A && git commit -a -m "Add KernelSU"
         repo status
 
