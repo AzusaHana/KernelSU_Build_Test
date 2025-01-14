@@ -44,7 +44,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE
         git clone https://github.com/tiann/KernelSU
-        cd kernel_platform
+        cd kernel_workspace/kernel_platform
         GKI_ROOT=$(pwd)
         ln -sf $GITHUB_WORKSPACE/KernelSU/kernel $GKI_ROOT/common/drivers/kernelsu
         DRIVER_MAKEFILE=$GKI_ROOT/common/drivers/Makefile
