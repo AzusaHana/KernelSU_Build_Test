@@ -178,6 +178,68 @@ jobs:
         name: AK3-Nameless-OPlus-SM8250-Unofficial-KSU_${{ env.KSUVER_1 }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
 
+    - name: Setup KernelSU-Next
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        curl -LSs "https://raw.githubusercontent.com/rifsxd/KernelSU-Next/next/kernel/setup.sh" | bash -
+        KSU_VERSION=$(cd KernelSU-Next && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
+        echo "KSUVER_2=$KSU_VERSION" >> $GITHUB_ENV
+      
+    - name: Build kernel with KernelSU-Next
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export BRAND_SHOW_FLAG=oneplus
+        export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin:$PATH
+        export KBUILD_BUILD_HOST=Github-Action
+        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        BA_CMD="CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android-"
+        EX_CMD="LD=ld.lld LLVM=1 LLVM_IAS=1"
+        DEFCONFIG="vendor/kona-perf_defconfig vendor/debugfs.config"
+        make O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD $DEFCONFIG
+        make -j$(nproc --all) O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD
+    
+    - name: Check a kernel output files KernelSU-Next
+      run: |
+       cd $GITHUB_WORKSPACE/kernel_workspace
+       if [ -f android-kernel/out/arch/arm64/boot/Image ]; then
+           echo "CHECK_IMAGE_2=true" >> $GITHUB_ENV
+       else
+           echo "Kernel output file is empty"
+           exit 1
+       fi
+      
+    - name: Make AnyKernel3 with KernelSU-Next
+      if: env.CHECK_IMAGE_2 == 'true'
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        git clone https://github.com/osm0sis/AnyKernel3 --depth=1 AnyKernel3
+        sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
+        sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' AnyKernel3/anykernel.sh
+        sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
+        cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
+        rm -rf AnyKernel3/.git* AnyKernel3/README.md
+
+    - name: Compress AnyKernel3 with KernelSU-Next folder to zip
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
+        zip -r $GITHUB_WORKSPACE/AK3-Nameless-OPlus-SM8250-KSU-Next_${{ env.KSUVER_2 }}-${{ env.BUILD_TIME }}.zip ./*
+
+    - name: Upload Image
+      if: env.CHECK_IMAGE_2 == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: Image-KSU-Next_${{ env.KSUVER_2 }}
+        path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
+
+    - name: Upload AnyKernel3
+      if: env.CHECK_IMAGE_2 == 'true'
+      uses: actions/upload-artifact@v4
+      with:
+        name: AK3-Nameless-OPlus-SM8250-KSU-Next_${{ env.KSUVER_2 }}-${{ env.BUILD_TIME }}
+        path: kernel_workspace/AnyKernel3/*
+
     - name: Send AnyKernel3 to Telegram
       env:
         TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
@@ -187,6 +249,8 @@ jobs:
         <blockquote><a href=\"https://github.com/tiann/KernelSU/tree/v0.9.5\"><b>Official KernelSU</b> - ${{ env.KSUVER }}</a></blockquote>"
         caption2="\
         <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU</b> - ${{ env.KSUVER_1 }}</a></blockquote>
+        caption3="\
+        <blockquote><a href=\"https://github.com/rifsxd/KernelSU-Next\"><b>KernelSU Next</b> - ${{ env.KSUVER_2 }}</a></blockquote>
         
         ROM:<blockquote><b>Nameless-CLO 15</b> - <a href=\"https://t.me/NamelessUpdates/186\">Dec 2024 update</a></blockquote>
         Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T | OnePlus 9R</blockquote>
@@ -194,7 +258,8 @@ jobs:
         Special Note:
         <blockquote>The official version requires installing the <a href=\"https://t.me/KernelSU_group/3234/290349\">manager version 11948</a> or an earlier version</blockquote>
         <blockquote>The unofficial version is recommended to install an <a href=\"https://github.com/backslashxx/KernelSU/releases\">unofficial manager</a></blockquote>
-        Change Log:<blockquote>Update the unofficial KernelSU from backslashxx's fork.</blockquote>
+        <blockquote>The next version is recommended to install an <a href=\"https://github.com/rifsxd/KernelSU-Next/releases\">next manager</a></blockquote>
+        Change Log:<blockquote>Update the unofficial KernelSU from backslashxx's fork.Add the KernelSU-Next from rifsxd's fork.</blockquote>
         
         <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Github Action</a>"
         media=$(jq -n \
@@ -202,9 +267,13 @@ jobs:
           --arg caption1 "$caption1" \
           --arg media2 "attach://unofficial" \
           --arg caption2 "$caption2" \
+          --arg media3 "attach://next" \
+          --arg caption3 "$caption3" \
           '[{type: "document", media: $media1, caption: $caption1, parse_mode: "HTML"},
-            {type: "document", media: $media2, caption: $caption2, parse_mode: "HTML"}]')
+            {type: "document", media: $media2, caption: $caption2, parse_mode: "HTML"},
+            {type: "document", media: $media3, caption: $caption3, parse_mode: "HTML"}]')
         curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
             -F "media=$media" \
             -F official="@$GITHUB_WORKSPACE/AK3-Nameless-OPlus-SM8250-Official-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" \
-            -F unofficial="@$GITHUB_WORKSPACE/AK3-Nameless-OPlus-SM8250-Unofficial-KSU_${{ env.KSUVER_1 }}-${{ env.BUILD_TIME }}.zip"
+            -F unofficial="@$GITHUB_WORKSPACE/AK3-Nameless-OPlus-SM8250-Unofficial-KSU_${{ env.KSUVER_1 }}-${{ env.BUILD_TIME }}.zip"\
+            -F next="@$GITHUB_WORKSPACE/AK3-Nameless-OPlus-SM8250-KSU-Next_${{ env.KSUVER_2 }}-${{ env.BUILD_TIME }}.zip"
