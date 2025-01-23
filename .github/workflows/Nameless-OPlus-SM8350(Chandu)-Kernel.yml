@@ -100,7 +100,7 @@ jobs:
            exit 1
        fi
       
-     - name: Make AnyKernel3 with official KernelSU
+    - name: Make AnyKernel3 with official KernelSU
       if: env.CHECK_IMAGE == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
