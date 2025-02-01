@@ -117,7 +117,7 @@ jobs:
         rm -rf KernelSU
         rm -rf drivers/kernelsu
         curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/magic/kernel/setup.sh" | bash -s magic
-        KSU_VERSION_1=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10169)
+        KSU_VERSION_1=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10167)
         echo "KSUVER_1=$KSU_VERSION_1" >> $GITHUB_ENV
 
     - name: add get_cred_rcu
