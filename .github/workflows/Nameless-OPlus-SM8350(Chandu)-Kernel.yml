@@ -122,7 +122,7 @@ jobs:
         rm -rf KernelSU
         rm -rf drivers/kernelsu
         curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/magic/kernel/setup.sh" | bash -s magic
-        KSU_VERSION_1=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10169)
+        KSU_VERSION_1=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10167)
         echo "KSUVER_1=$KSU_VERSION_1" >> $GITHUB_ENV
 
     - name: Build kernel with unofficial KernelSU
@@ -202,7 +202,7 @@ jobs:
         Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
         Special Note:
         <blockquote>The unofficial version is recommended to install an <a href=\"https://github.com/backslashxx/KernelSU/releases\">unofficial manager</a></blockquote>
-        Change Log:<blockquote>Initial version, add unofficial KernelSU(magic mount)</blockquote>
+        Change Log:<blockquote>Update the unofficial KernelSU from backslashxx's fork.</blockquote>
         
         <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Github Action</a>"
         media=$(jq -n \
