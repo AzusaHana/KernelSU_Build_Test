@@ -126,6 +126,14 @@ jobs:
         sed -i '260 r get_cred_rcu.h' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/include/linux/cred.h
         sed -i 's/atomic_inc_not_zero(&((struct cred \*)cred)->usage)/get_cred_rcu(cred)/g' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/kernel/cred.c
 
+    - name: backport strncpy_from_user_nofault
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/include/linux
+        sed -i 's|extern long strncpy_from_unsafe_user|long strncpy_from_user_nofault|' uaccess.h
+        sed -i 's|				     long count);|                               long count);|' uaccess.h
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/mm
+        sed -i 's|strncpy_from_unsafe_user|strncpy_from_user_nofault|' maccess.c
+
     - name: Build kernel with unofficial KernelSU
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
