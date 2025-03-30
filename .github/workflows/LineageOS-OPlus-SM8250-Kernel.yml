@@ -44,7 +44,11 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone --recursive https://github.com/AzusaHana/android_kernel_oneplus_sm8250 android-kernel --depth=1
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/scripts
+        cd android-kernel
+        git submodule update --remote
+        KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
+        echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+        cd scripts
         sed -i 's/ -dirty//g' setlocalversion
       
     - name: Build kernel with rsuntk KernelSU
@@ -100,5 +104,5 @@ jobs:
       if: ${{ env.CHECK_IMAGE == 'true' }}
       uses: actions/upload-artifact@v4
       with:
-        name: AK3-LineageOS_22.2-OPlus-SM8250_KSU-${{ env.KSUVER }}-${{ env.BUILD_TIME }}
+        name: AK3-LineageOS_22.2-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
