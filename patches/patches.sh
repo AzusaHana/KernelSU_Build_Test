@@ -17,3 +17,7 @@ sed -i '/ssize_t vfs_read(struct file \*file, char __user \*buf, size_t count, l
 # fs/stat.c
 sed -i '/EXPORT_SYMBOL(vfs_statx_fd);/a \\n#ifdef CONFIG_KSU\nextern int ksu_handle_stat(int *dfd, const char __user **filename_user, int *flags);\n#endif' fs/stat.c
 sed -i '/unsigned int lookup_flags = LOOKUP_FOLLOW \| LOOKUP_AUTOMOUNT;/a \#ifdef CONFIG_KSU\n\tksu_handle_stat(&dfd, &filename, &flags);\n#endif' fs/stat.c
+
+# drivers/input/input.c
+sed -i '/static void input_handle_event(struct input_dev \*dev,/i\#ifdef CONFIG_KSU\nextern bool ksu_input_hook __read_mostly;\nextern int ksu_handle_input_handle_event(unsigned int *type, unsigned int *code, int *value);\n#endif\n' drivers/input/input.c
+sed -i '/if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)/i\#ifdef CONFIG_KSU\n\tif (unlikely(ksu_input_hook))\n\t\tksu_handle_input_handle_event(\&type, \&code, \&value);\n#endif\n' drivers/input/input.c
