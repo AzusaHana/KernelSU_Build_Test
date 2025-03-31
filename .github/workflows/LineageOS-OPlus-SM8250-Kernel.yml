@@ -43,9 +43,16 @@ jobs:
     - name: Download kernel source
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone --recursive https://github.com/AzusaHana/android_kernel_oneplus_sm8250 android-kernel --depth=1
-        cd android-kernel
-        git submodule update --remote
+        git clone --recursive https://github.com/LineageOS/android_kernel_oneplus_sm8250 -b lineage-22.2 android-kernel --depth=1
+
+    - name: Set up rsuntk KernelSU
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh" | bash -s main
+        bash $GITHUB_WORKSPACE/patches/patches.sh
+        if ! grep -q "CONFIG_KSU=y" arch/arm64/configs/vendor/kona-perf_defconfig; then
+          sed -i '$a # KernelSU\nCONFIG_KSU=y' arch/arm64/configs/vendor/kona-perf_defconfig
+        fi
         KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
         echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
         cd scripts
