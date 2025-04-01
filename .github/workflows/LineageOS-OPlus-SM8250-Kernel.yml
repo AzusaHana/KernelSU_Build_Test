@@ -142,7 +142,7 @@ jobs:
           --arg media1 "attach://anykernel3" \
           --arg media2 "attach://Image" \
           --arg caption2 "$caption2" \
-          '[{type: "document", media: $media1, caption: $caption1, parse_mode: "HTML"},
+          '[{type: "document", media: $media1, parse_mode: "HTML"},
             {type: "document", media: $media2, caption: $caption2, parse_mode: "HTML"}]')
         curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
             -F "media=$media" \
