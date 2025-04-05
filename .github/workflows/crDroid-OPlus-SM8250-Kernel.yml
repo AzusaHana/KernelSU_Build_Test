@@ -1,0 +1,153 @@
+name: Build crDroid OPlus SM8250 Kernel
+
+on:
+  workflow_dispatch:
+
+env:
+  TZ: Asia/Shanghai
+
+jobs:
+  build:
+    name: Build Kernel by ${{ github.actor }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Set swap to 10G
+      uses: pierotofy/set-swap-space@master
+      with:
+        swap-size-gb: 10
+    
+    - name: Setup build kernel environment
+      run: |
+        echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%y%m%d")" >> $GITHUB_ENV
+        echo "BUILD_TIME_1=$(TZ=Asia/Shanghai date "+%Y-%m-%d")" >> $GITHUB_ENV
+        sudo apt-get update
+        sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib bzip2 libbz2-dev liblz4-tool make squashfs-tools dpkg-dev libssl-dev python3 bc libc6-dev-i386 libncurses5-dev
+        mkdir -p $GITHUB_WORKSPACE/kernel_workspace
+    
+    - name: Download Clang-aosp
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        mkdir clang-aosp
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r522817.tar.gz
+        tar -C clang-aosp/ -zxvf clang-r522817.tar.gz
+    
+    - name: Download Gcc-aosp
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+          mkdir gcc-64
+          wget -O gcc-aarch64.tar.gz https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.1.0_r27.tar.gz
+          tar -C gcc-64/ -zxvf gcc-aarch64.tar.gz
+    
+    - name: Download kernel source
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        git clone --recursive https://github.com/crdroidandroid/android_kernel_oneplus_sm8250 -b 15.0 android-kernel --depth=1
+
+    - name: Set up rsuntk KernelSU
+      run: |
+        cd $GITHUB_WORKSPACE/patches
+        sed -i '1655 r path_umount.c' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/fs/namespace.c
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh" | bash -s main
+        bash $GITHUB_WORKSPACE/patches/patches.sh
+        if ! grep -q "CONFIG_KSU=y" arch/arm64/configs/vendor/kona-perf_defconfig; then
+          sed -i '$a # KernelSU\nCONFIG_KSU=y' arch/arm64/configs/vendor/kona-perf_defconfig
+        fi
+        KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
+        echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
+        cd scripts
+        sed -i 's/ -dirty//g' setlocalversion
+
+    - name: Build kernel with rsuntk KernelSU
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export BRAND_SHOW_FLAG=oneplus
+        export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin:$PATH
+        export KBUILD_BUILD_HOST=Github-Action
+        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        BA_CMD="CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android-"
+        EX_CMD="LD=ld.lld LLVM=1 LLVM_IAS=1"
+        DEFCONFIG="vendor/kona-perf_defconfig vendor/debugfs.config"
+        make O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD $DEFCONFIG
+        make -j$(nproc --all) O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD
+    
+    - name: Check a kernel output files with rsuntk KernelSU
+      run: |
+       cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out
+       if [ -f arch/arm64/boot/Image ]; then
+           echo "CHECK_IMAGE=true" >> $GITHUB_ENV
+           KERNEL_VERSION=$(cat include/config/kernel.release)
+           echo "KERNEL_VERSION=$KERNEL_VERSION" >> $GITHUB_ENV
+       else
+           echo "Kernel output file is empty"
+           exit 1
+       fi
+      
+    - name: Make AnyKernel3 with rsuntk KernelSU
+      if: ${{ env.CHECK_IMAGE == 'true' }}
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        git clone https://github.com/osm0sis/AnyKernel3 --depth=1 AnyKernel3
+        sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
+        sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' AnyKernel3/anykernel.sh
+        sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
+        cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
+        rm -rf AnyKernel3/.git* AnyKernel3/README.md
+
+    - name: Compress AnyKernel3 with official KernelSU folder to zip
+      if: ${{ env.CHECK_IMAGE == 'true' }}
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
+        zip -r $GITHUB_WORKSPACE/AK3-crDroid-OPlus-SM8250-Official-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
+
+    - name: Upload Image
+      if: ${{ env.CHECK_IMAGE == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: Image
+        path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
+
+    - name: Upload AnyKernel3
+      if: ${{ env.CHECK_IMAGE == 'true' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: AK3-crDroid_11-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}
+        path: kernel_workspace/AnyKernel3/*
+    
+    - name: Zip files
+      run: |
+        zip -r Image.zip $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/arm64/boot/Image
+        cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
+        zip -r $GITHUB_WORKSPACE/AK3-crDroid_11-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
+
+    - name: Send AnyKernel3 to Telegram
+      env:
+        TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+      run: |
+        caption2="\
+        <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - ${{ env.KSUVER }}</a></blockquote>
+        
+        ROM:<blockquote><b>crDroid 11</b></blockquote>
+        Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T | OnePlus 9R</blockquote>
+        Kernel Version:<blockquote>${{ env.KERNEL_VERSION }}</blockquote>
+        Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
+        Special Note:
+        <blockquote>The unofficial version is recommended to install an <a href=\"https://github.com/rsuntk/KernelSU/releases\">unofficial manager</a></blockquote>
+        Change Log:<blockquote>Test only.</blockquote>
+        
+        <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Github Action</a>"
+        media=$(jq -n \
+          --arg media1 "attach://anykernel3" \
+          --arg media2 "attach://Image" \
+          --arg caption2 "$caption2" \
+          '[{type: "document", media: $media1, parse_mode: "HTML"},
+            {type: "document", media: $media2, caption: $caption2, parse_mode: "HTML"}]')
+        curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
+            -F "media=$media" \
+            -F anykernel3="@$GITHUB_WORKSPACE/AK3-crDroid_11-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" \
+            -F Image="@$GITHUB_WORKSPACE/Image.zip"
