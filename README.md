@@ -29,6 +29,9 @@
 **PixelOS 15**:  
 - [OPlus SM8250 (jef00)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/PixelOS-OPlus-SM8250-Kernel.yml): ```OnePlus 8 | OnePlus 8 Pro | OnePlus 8T```  
 
+**crDroid 11**:
+- [OPlus SM8250 (bojantanasic)](https://github.com/crdroidandroid/android_kernel_oneplus_sm8250): ```OnePlus 8 | OnePlus 8 Pro | OnePlus 8T```
+
 **Nameless 14**:   
 - [OPlus SM8350 (Chandu)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/Nameless-OPlus-SM8350(Chandu)-Kernel.yml): ```OnePlus 9 | OnePlus 9 Pro```  
 - [OPlus SM8550 (Chandu)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/Nameless-OPlus-SM8550-Kernel.yml): ```OnePlus 11 (salami)```  
@@ -51,6 +54,9 @@ Nameless-CLO 15:
 
 PixelOS 15:  
 [OPlus SM8250 (jef00)](https://github.com/jef00/kernel_oneplus_sm8250/tree/fifteen)  
+
+crDroid 11:  
+[OPlus SM8250 (bojantanasic)](https://github.com/crdroidandroid/android_kernel_oneplus_sm8250)
 
 Nameless 14:  
 [OPlus SM8350 (Chandu)](https://github.com/chandu078/android_kernel_oneplus_sm8350) | [OPlus SM8550 (Chandu)](https://github.com/chandu078/android_kernel_oneplus_sm8550)  
