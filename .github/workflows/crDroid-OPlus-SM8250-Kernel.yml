@@ -133,7 +133,7 @@ jobs:
         <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - ${{ env.KSUVER }}</a></blockquote>
         
         ROM:<blockquote><b>crDroid 11</b></blockquote>
-        Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T | OnePlus 9R</blockquote>
+        Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T</blockquote>
         Kernel Version:<blockquote>${{ env.KERNEL_VERSION }}</blockquote>
         Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
         Special Note:
