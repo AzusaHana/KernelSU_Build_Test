@@ -43,7 +43,7 @@ jobs:
     - name: Download kernel source
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone --recursive https://github.com/crdroidandroid/android_kernel_oneplus_sm8250 -b 15.0 android-kernel --depth=1
+        git clone --recursive https://github.com/The-Anomalist/Anomaly-Kernel -b Echelon android-kernel --depth=1
 
     - name: Set up rsuntk KernelSU
       run: |

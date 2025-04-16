@@ -56,7 +56,7 @@ PixelOS 15:
 [OPlus SM8250 (jef00)](https://github.com/jef00/kernel_oneplus_sm8250/tree/fifteen)  
 
 crDroid 11:  
-[OPlus SM8250 (bojantanasic)](https://github.com/crdroidandroid/android_kernel_oneplus_sm8250)
+[OPlus SM8250 (bojantanasic & The Anomalist)](https://github.com/The-Anomalist/Anomaly-Kernel)
 
 Nameless 14:  
 [OPlus SM8350 (Chandu)](https://github.com/chandu078/android_kernel_oneplus_sm8350) | [OPlus SM8550 (Chandu)](https://github.com/chandu078/android_kernel_oneplus_sm8550)  
