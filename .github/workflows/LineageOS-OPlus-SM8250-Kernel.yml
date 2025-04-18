@@ -30,8 +30,8 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         mkdir clang-aosp
-        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r522817.tar.gz
-        tar -C clang-aosp/ -zxvf clang-r522817.tar.gz
+        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r536225.tar.gz
+        tar -C clang-aosp/ -zxvf clang-r536225.tar.gz
     
     - name: Download Gcc-aosp
       run: |
