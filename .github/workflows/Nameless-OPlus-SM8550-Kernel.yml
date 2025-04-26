@@ -121,7 +121,7 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
       run: |
         caption="\
-        ROM:<blockquote><b>Nameless-CLO 15</b> - <a href=\"https://t.me/NamelessUpdates/192\">Dec 2024 update</a></blockquote>
+        ROM:<blockquote><b>Nameless-CLO 15</b> - <a href=\"https://t.me/NamelessUpdates/192\">March 2025 Release</a></blockquote>
         Device:<blockquote>OnePlus 11 (Salami)</blockquote>
         KernelSU:<blockquote>Official-${{ env.KSUVER }}</blockquote>
         Kernel Version:<blockquote>${{ env.KERNEL_VERSION }}</blockquote>
