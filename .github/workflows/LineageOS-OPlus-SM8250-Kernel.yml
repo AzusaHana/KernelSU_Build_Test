@@ -94,12 +94,6 @@ jobs:
         cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
         rm -rf AnyKernel3/.git* AnyKernel3/README.md
 
-    - name: Compress AnyKernel3 with official KernelSU folder to zip
-      if: ${{ env.CHECK_IMAGE == 'true' }}
-      run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
-        zip -r $GITHUB_WORKSPACE/AK3-LineageOS-OPlus-SM8250-Official-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
-
     - name: Upload Image
       if: ${{ env.CHECK_IMAGE == 'true' }}
       uses: actions/upload-artifact@v4
