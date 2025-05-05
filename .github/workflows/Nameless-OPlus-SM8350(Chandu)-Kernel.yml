@@ -10,6 +10,9 @@ jobs:
   build:
     name: Build Kernel by ${{ github.actor }}
     runs-on: ubuntu-latest
+    env:
+      CLANG_VERSION: clang-r536225
+
     steps:
     - uses: actions/checkout@v4
     
@@ -37,12 +40,21 @@ jobs:
         sudo apt-get install git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib bzip2 libbz2-dev liblz4-tool make squashfs-tools dpkg-dev libssl-dev python3 bc libc6-dev-i386 libncurses5-dev
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
     
-    - name: Download Clang-aosp
+    - name: Cache Clang toolchain
+      id: cache-clang
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/kernel_workspace/clang-aosp
+        key: ${{ env.CLANG_VERSION }}
+
+    - name: Download & extract Clang-aosp
+      if: steps.cache-clang.outputs.cache-hit != 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        mkdir clang-aosp
-        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r522817.tar.gz
-        tar -C clang-aosp/ -zxvf clang-r522817.tar.gz
+        mkdir -p clang-aosp
+        wget -O ${CLANG_VERSION}.tar.gz \
+          https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/${CLANG_VERSION}.tar.gz
+        tar -C clang-aosp -zxvf ${CLANG_VERSION}.tar.gz
 
     - name: Download kernel source
       run: |
@@ -100,7 +112,6 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
         zip -r "$GITHUB_WORKSPACE/AK3-Nameless-OPlus-SM8350(Chandu)-Official-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" ./*
-
     
     - name: Upload Image
       if: env.CHECK_IMAGE == 'true'
@@ -116,16 +127,16 @@ jobs:
         name: AK3-Nameless-OPlus-SM8350(Chandu)-Official-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
 
-    - name: Setup unofficial KernelSU
+    - name: Set up rsuntk KernelSU
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         rm -rf KernelSU
         rm -rf drivers/kernelsu
-        curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/magic/kernel/setup.sh" | bash -s magic
-        KSU_VERSION_1=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10167)
+        curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh" | bash -s main
+        KSU_VERSION_1=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 10200)
         echo "KSUVER_1=$KSU_VERSION_1" >> $GITHUB_ENV
 
-    - name: Build kernel with unofficial KernelSU
+    - name: Build kernel with rsuntk KernelSU
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         rm -rf out/arch/arm64/boot/Image
@@ -140,28 +151,20 @@ jobs:
         DEFCONFIG="vendor/lahaina-qgki_defconfig"
         make O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD $DEFCONFIG
         make -j$(nproc --all) O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD 
-    
-    - name: Check a kernel output files with official KernelSU
-      run: |
-       cd $GITHUB_WORKSPACE/kernel_workspace
-       if [ -f android-kernel/out/arch/arm64/boot/Image ]; then
-           echo "CHECK_IMAGE=true" >> $GITHUB_ENV
-       else
-           echo "Kernel output file is empty"
-           exit 1
-       fi
 
-    - name: Check a kernel output files with unofficial KernelSU
+    - name: Check a kernel output files with rsuntk KernelSU
       run: |
-       cd $GITHUB_WORKSPACE/kernel_workspace
-       if [ -f android-kernel/out/arch/arm64/boot/Image ]; then
+       cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out
+       if [ -f arch/arm64/boot/Image ]; then
            echo "CHECK_IMAGE_1=true" >> $GITHUB_ENV
+           KERNEL_VERSION=$(cat include/config/kernel.release)
+           echo "KERNEL_VERSION=$KERNEL_VERSION" >> $GITHUB_ENV
        else
            echo "Kernel output file is empty"
            exit 1
        fi
 
-    - name: Make AnyKernel3 with unofficial KernelSU
+    - name: Make AnyKernel3 with rsuntk KernelSU
       if: env.CHECK_IMAGE_1 == 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
@@ -195,14 +198,15 @@ jobs:
         caption1="\
         <blockquote><a href=\"https://github.com/tiann/KernelSU/tree/v0.9.5\"><b>Official KernelSU</b> - ${{ env.KSUVER }}</a></blockquote>"
         caption2="\
-        <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU</b> - ${{ env.KSUVER_1 }}</a></blockquote>
+        <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU</b> - ${{ env.KSUVER_1 }}</a></blockquote>
         
-        ROM:<blockquote><b>Nameless-CLO 15</b> - <a href=\"https://t.me/NamelessUpdates/189\">JAN 2025 update</a></blockquote>
+        ROM:<blockquote><b>Nameless-CLO 15</b> - <a href=\"https://t.me/NamelessUpdates/197\">Apr. 2025 update</a></blockquote>
         Device:<blockquote>OnePlus 9 | OnePlus 9 Pro</blockquote>
+        Kernel Version:<blockquote>${{ env.KERNEL_VERSION }}</blockquote>
         Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
         Special Note:
-        <blockquote>The unofficial version is recommended to install an <a href=\"https://github.com/backslashxx/KernelSU/releases\">unofficial manager</a></blockquote>
-        Change Log:<blockquote>Update the unofficial KernelSU from backslashxx's fork.</blockquote>
+        <blockquote>The unofficial version is recommended to install an <a href=\"https://github.com/rsuntk/KernelSU/releases\">unofficial manager</a></blockquote>
+        Change Log:<blockquote>Update rsuntk KernelSU to version 1.0.5</blockquote>
         
         <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Github Action</a>"
         media=$(jq -n \

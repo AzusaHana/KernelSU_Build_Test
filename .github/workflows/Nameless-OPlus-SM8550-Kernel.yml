@@ -10,6 +10,9 @@ jobs:
   build:
     name: Build Kernel by ${{ github.actor }}
     runs-on: ubuntu-latest
+    env:
+      CLANG_VERSION: clang-r536225
+
     steps:
     - uses: actions/checkout@v4
     
@@ -25,17 +28,28 @@ jobs:
         sudo apt-get install git dwarves libelf-dev ccache automake flex bison build-essential zlib1g-dev libncurses5-dev libc6-dev-i386 bc device-tree-compiler python3 make
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
     
-    - name: Download Clang-aosp
+    - name: Cache Clang toolchain
+      id: cache-clang
+      uses: actions/cache@v4
+      with:
+        path: ${{ github.workspace }}/kernel_workspace/clang-aosp
+        key: ${{ env.CLANG_VERSION }}
+
+    - name: Download & extract Clang-aosp
+      if: steps.cache-clang.outputs.cache-hit != 'true'
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        mkdir clang-aosp
-        wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/clang-r522817.tar.gz
-        tar -C clang-aosp/ -zxvf clang-r522817.tar.gz
+        mkdir -p clang-aosp
+        wget -O ${CLANG_VERSION}.tar.gz \
+          https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/${CLANG_VERSION}.tar.gz
+        tar -C clang-aosp -zxvf ${CLANG_VERSION}.tar.gz
     
     - name: Download kernel source
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone --recursive https://github.com/chandu078/android_kernel_oneplus_sm8550 -b lineage-22.1 android-kernel --depth=1
+        git clone --recursive https://github.com/chandu078/android_kernel_oneplus_sm8550 -b lineage-22.1 android-kernel --depth 2
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
+        git checkout 4125bc9
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/scripts
         sed -i 's/ -dirty//g' setlocalversion
 
@@ -66,9 +80,11 @@ jobs:
     
     - name: Check a kernel output files
       run: |
-       cd $GITHUB_WORKSPACE/kernel_workspace
-       if [ -f android-kernel/out/arch/arm64/boot/Image ]; then
+       cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out
+       if [ -f arch/arm64/boot/Image ]; then
            echo "CHECK_IMAGE=true" >> $GITHUB_ENV
+           KERNEL_VERSION=$(cat include/config/kernel.release)
+           echo "KERNEL_VERSION=$KERNEL_VERSION" >> $GITHUB_ENV
        else
            echo "Kernel output file is empty"
            exit 1
@@ -107,11 +123,12 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
       run: |
         caption="\
-        ROM:<blockquote><b>Nameless-CLO 15</b> - <a href=\"https://t.me/NamelessUpdates/192\">Dec 2024 update</a></blockquote>
+        ROM:<blockquote><b>Nameless-CLO 15</b> - <a href=\"https://t.me/NamelessUpdates/192\">March 2025 Release</a></blockquote>
         Device:<blockquote>OnePlus 11 (Salami)</blockquote>
         KernelSU:<blockquote>Official-${{ env.KSUVER }}</blockquote>
+        Kernel Version:<blockquote>${{ env.KERNEL_VERSION }}</blockquote>
         Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
-        Change Log:<blockquote>Waiting for editing...</blockquote>
+        Change Log:<blockquote>Update KernelSU</blockquote>
         
         <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Github Action</a>"
         media=$(jq -n \
