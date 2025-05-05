@@ -30,7 +30,7 @@
 - [OPlus SM8250 (jef00)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/PixelOS-OPlus-SM8250-Kernel.yml): ```OnePlus 8 | OnePlus 8 Pro | OnePlus 8T```  
 
 **crDroid 11**:
-- [OPlus SM8250 (bojantanasic)](https://github.com/crdroidandroid/android_kernel_oneplus_sm8250): ```OnePlus 8 | OnePlus 8 Pro | OnePlus 8T```
+- [OPlus SM8250 (bojantanasic & The Anomalist)](https://github.com/crdroidandroid/android_kernel_oneplus_sm8250): ```OnePlus 8 | OnePlus 8 Pro | OnePlus 8T```
 
 **Nameless 14**:   
 - [OPlus SM8350 (Chandu)](https://github.com/AzusaHana/KernelSU_Build_Test/actions/workflows/Nameless-OPlus-SM8350(Chandu)-Kernel.yml): ```OnePlus 9 | OnePlus 9 Pro```  
