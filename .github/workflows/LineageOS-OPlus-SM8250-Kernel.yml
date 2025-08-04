@@ -91,7 +91,7 @@ jobs:
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
         BA_CMD="CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android-"
         EX_CMD="LD=ld.lld LLVM=1 LLVM_IAS=1"
-        DEFCONFIG="vendor/kona-perf_defconfig vendor/debugfs.config"
+        DEFCONFIG="vendor/kona-perf_defconfig vendor/debugfs.config vendor/oplus.config"
         make O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD $DEFCONFIG
         make -j$(nproc --all) O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD
     
