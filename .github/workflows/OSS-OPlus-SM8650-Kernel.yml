@@ -42,24 +42,8 @@ jobs:
 
     - name: Setup KernelSU
       run: |
-        cd $GITHUB_WORKSPACE
-        git clone https://github.com/tiann/KernelSU
         cd kernel_workspace/kernel_platform
-        GKI_ROOT=$(pwd)
-        ln -sf $GITHUB_WORKSPACE/KernelSU/kernel $GKI_ROOT/common/drivers/kernelsu
-        DRIVER_MAKEFILE=$GKI_ROOT/common/drivers/Makefile
-        DRIVER_KCONFIG=$GKI_ROOT/common/drivers/Kconfig
-        grep -q "kernelsu" "$DRIVER_MAKEFILE" || printf "\nobj-\$(CONFIG_KSU) += kernelsu/\n" >> "$DRIVER_MAKEFILE"
-        grep -q "kernelsu" "$DRIVER_KCONFIG" || sed -i "/endmenu/i\\source \"drivers/kernelsu/Kconfig\"" "$DRIVER_KCONFIG"
-        if [ ! -e build/build.sh ]; then
-          GLIBC_VERSION=$(ldd --version 2>/dev/null | head -n 1 | awk '{print $NF}')
-          echo "GLIBC_VERSION: $GLIBC_VERSION"
-          if [ "$(printf '%s\n' "2.38" "$GLIBC_VERSION" | sort -V | head -n1)" = "2.38" ]; then
-            echo "Patching resolve_btfids/Makefile"
-            cd $GKI_ROOT/common/ && sed -i '/\$(Q)\$(MAKE) -C \$(SUBCMD_SRC) OUTPUT=\$(abspath \$(dir \$@))\/ \$(abspath \$@)/s//$(Q)$(MAKE) -C $(SUBCMD_SRC) EXTRA_CFLAGS="$(CFLAGS)" OUTPUT=$(abspath $(dir $@))\/ $(abspath $@)/' tools/bpf/resolve_btfids/Makefile || echo "No patch needed."
-          fi
-        fi
-        repo status
+        curl -LSs "https://raw.githubusercontent.com/tiann/KernelSU/main/kernel/setup.sh" | bash -s main
         
     - name: Make working directory clean to avoid dirty
       run: |
@@ -71,7 +55,7 @@ jobs:
     - name: Build kernel
       run: |
         cd kernel_workspace
-        ./kernel_platform/oplus/build/oplus_build_kernel.sh pineapple gki
+        ./kernel_platform/build_with_bazel.py -t pineapple gki
 
     - name: Make AnyKernel3
       run: |
@@ -82,17 +66,17 @@ jobs:
     - name: Upload AnyKernel3
       uses: actions/upload-artifact@v4
       with:
-        name: AnyKernel3-OSS-OPlus12-V
+        name: AnyKernel3-OSS-oneplus12_v
         path: ./AnyKernel3/*
 
     - name: Upload kernel Image
       uses: actions/upload-artifact@v4
       with:
-        name: Image-OSS-OPlus12-V
+        name: Image-OSS-oneplus12_v
         path: kernel_workspace/kernel_platform/out/msm-kernel-pineapple-gki/dist/Image
 
     - name: Upload boot.img
       uses: actions/upload-artifact@v4
       with:
-        name: boot-OSS-OPlus12-V.img
+        name: boot-OSS-oneplus12_v.img
         path: kernel_workspace/kernel_platform/out/msm-kernel-pineapple-gki/dist/boot.img
