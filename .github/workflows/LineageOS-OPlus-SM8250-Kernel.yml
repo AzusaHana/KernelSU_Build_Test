@@ -70,7 +70,7 @@ jobs:
     - name: Set up rsuntk KernelSU
       run: |
         cd $GITHUB_WORKSPACE/patches
-        sed -i '1655 r path_umount.c' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/fs/namespace.c
+        sed -i '1698 r path_umount.c' $GITHUB_WORKSPACE/kernel_workspace/android-kernel/fs/namespace.c
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh" | bash -s main
         bash $GITHUB_WORKSPACE/patches/patches.sh
