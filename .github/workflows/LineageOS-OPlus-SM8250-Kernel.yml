@@ -78,11 +78,10 @@ jobs:
       id: cache-kernel
       uses: actions/cache@v4
       with:
-        path: |
-          ${{ github.workspace }}/kernel_workspace/android-kernel/out
-        key: kernel-${{ runner.os }}-${{ env.UPSTREAM_HASH }}
+        path: ${{ github.workspace }}/kernel_workspace/android-kernel/out
+        key: kernel-${{ runner.os }}-${{ env.UPSTREAM_HASH }}-${{ github.run_id }}
         restore-keys: |
-          kernel-${{ runner.os }}-
+          kernel-${{ runner.os }}-${{ env.UPSTREAM_HASH }}-
 
     - name: Set up rsuntk KernelSU
       run: |
