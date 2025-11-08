@@ -4,6 +4,7 @@
 #               bdqllW <bdqllT@gmail.com>
 # Tested kernel versions: 5.4, 4.19, 4.14, 4.9
 # 20240123
+# sys_reboot hook kernel/reboot.c patch (2025-11-09)
 
 patch_files=(
     fs/exec.c
@@ -11,6 +12,7 @@ patch_files=(
     fs/read_write.c
     fs/stat.c
     drivers/input/input.c
+    kernel/reboot.c
 )
 
 for i in "${patch_files[@]}"; do
@@ -71,6 +73,13 @@ for i in "${patch_files[@]}"; do
         sed -i '/static void input_handle_event/i\#ifdef CONFIG_KSU\nextern bool ksu_input_hook __read_mostly;\nextern int ksu_handle_input_handle_event(unsigned int *type, unsigned int *code, int *value);\n#endif\n' drivers/input/input.c
         sed -i '/int disposition = input_get_disposition(dev, type, code, &value);/a\        #ifdef CONFIG_KSU\n        if (unlikely(ksu_input_hook))\n                ksu_handle_input_handle_event(&type, &code, &value);\n        #endif' drivers/input/input.c
         ;;
+
+    # sys_reboot hook
+    kernel/reboot.c)
+        sed -i '/SYSCALL_DEFINE4(reboot, int, magic1, int, magic2, unsigned int, cmd,/i\#ifdef CONFIG_KSU\nextern int ksu_handle_sys_reboot(int magic1, int magic2, unsigned int cmd, void __user **arg);\n#endif' kernel/reboot.c
+        sed -i '/int ret = 0;/a\ \n#ifdef CONFIG_KSU\n\tksu_handle_sys_reboot(magic1, magic2, cmd, &arg);\n#endif' kernel/reboot.c
+        ;;
+        
     esac
 
 done
