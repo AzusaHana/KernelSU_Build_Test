@@ -67,6 +67,23 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone --recursive https://github.com/LineageOS/android_kernel_oneplus_sm8250 -b lineage-23.0 android-kernel --depth=1
 
+    - name: Get upstream kernel commit hash
+      id: get-upstream-hash
+      run: |
+        UPSTREAM_HASH=$(git ls-remote https://github.com/LineageOS/android_kernel_oneplus_sm8250 refs/heads/lineage-23.0 | cut -f1)
+        echo "UPSTREAM_HASH=$UPSTREAM_HASH" >> $GITHUB_ENV
+        echo "Upstream commit hash: $UPSTREAM_HASH"
+
+    - name: Cache Kernel build artifacts
+      id: cache-kernel
+      uses: actions/cache@v4
+      with:
+        path: |
+          ${{ github.workspace }}/kernel_workspace/android-kernel/out
+        key: kernel-${{ runner.os }}-${{ env.UPSTREAM_HASH }}
+        restore-keys: |
+          kernel-${{ runner.os }}-
+
     - name: Set up rsuntk KernelSU
       run: |
         cd $GITHUB_WORKSPACE/patches
