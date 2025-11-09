@@ -11,7 +11,7 @@ jobs:
     name: Build Kernel by ${{ github.actor }}
     runs-on: ubuntu-latest
     env:
-      CLANG_VERSION: clang-r536225
+      CLANG_VERSION: clang-r547379
       GCC_TAG: android-12.1.0_r27
 
     steps:
