@@ -48,6 +48,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone --recursive https://github.com/LineageOS/android_kernel_oneplus_sm8550 -b lineage-23.0 android-kernel --depth=1
+        sed -i '$a CONFIG_SALAMI_DTB=y' /arch/arm64/configs/vendor/oplus/kalama_GKI.config
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/scripts
         sed -i 's/ -dirty//g' setlocalversion
         cd $GITHUB_WORKSPACE/kernel_workspace
