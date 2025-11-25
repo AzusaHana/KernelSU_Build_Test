@@ -35,9 +35,8 @@ for i in "${patch_files[@]}"; do
 
     ## open.c
     fs/open.c)
-        # Insert extern for ksu_handle_faccessat and call ksu_handle_faccessat early in do_faccessat
-        sed -i '/long do_faccessat(int dfd, const char __user \*filename, int mode)/i\#ifdef CONFIG_KSU\nextern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,\n\t\t\t\t     int *flags);\n#endif' fs/open.c
-        sed -i '/unsigned int lookup_flags = LOOKUP_FOLLOW;/a\ \n#ifdef CONFIG_KSU\n\tksu_handle_faccessat(&dfd, &filename, &mode, NULL);\n#endif' fs/open.c
+        sed -i '/long do_faccessat(int dfd, const char __user \*filename, int mode)/i\#ifdef CONFIG_KSU\nextern int ksu_handle_faccessat(int *dfd, const char __user **filename_user, int *mode,\n\t\t\t\t\tint *flags);\n#endif' fs/open.c
+        sed -i '/if (mode & ~S_IRWXO)/i\ \n#ifdef CONFIG_KSU\n\tksu_handle_faccessat(&dfd, &filename, &mode, NULL);\n#endif' fs/open.c
         ;;
 
     ## read_write.c
