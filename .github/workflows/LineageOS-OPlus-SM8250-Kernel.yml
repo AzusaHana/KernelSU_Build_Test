@@ -132,7 +132,6 @@ jobs:
     
     - name: Zip files
       run: |
-        zip -r Image.zip $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/arm64/boot/Image
         cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
         zip -r $GITHUB_WORKSPACE/AK3-LineageOS-23.0-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
 
@@ -162,4 +161,4 @@ jobs:
         curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
             -F "media=$media" \
             -F anykernel3="@$GITHUB_WORKSPACE/AK3-LineageOS-23.0-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" \
-            -F Image="@$GITHUB_WORKSPACE/Image.zip"
+            -F Image="@$GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/arm64/boot/Image"
