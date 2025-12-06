@@ -42,7 +42,12 @@ for i in "${patch_files[@]}"; do
     ## read_write.c
     fs/read_write.c)
         sed -i '/ssize_t vfs_read(struct file/i\#ifdef CONFIG_KSU\nextern bool ksu_vfs_read_hook __read_mostly;\nextern int ksu_handle_vfs_read(struct file **file_ptr, char __user **buf_ptr,\n\t\t\t\t\t size_t *count_ptr, loff_t **pos);\n#endif' fs/read_write.c
-        sed -i '/ssize_t vfs_read(struct file/,/ssize_t ret;/{/ssize_t ret;/a\ \n#ifdef CONFIG_KSU\n\tif (unlikely(ksu_vfs_read_hook))\n\t\tksu_handle_vfs_read(&file, &buf, &count, &pos);\n#endif\n}' fs/read_write.c
+        sed -i '/ssize_t vfs_read(struct file/,/ssize_t ret;/{/ssize_t ret;/a\
+        #ifdef CONFIG_KSU\
+        if (unlikely(ksu_vfs_read_hook))\
+            ksu_handle_vfs_read(&file, &buf, &count, &pos);\
+        #endif
+        }' fs/read_write.c
         ;;
 
     ## stat.c
