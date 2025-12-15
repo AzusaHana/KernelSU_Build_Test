@@ -13,6 +13,7 @@ jobs:
     env:
       CLANG_VERSION: clang-r547379
       GCC_TAG: android-12.1.0_r27
+      Lineage_VERSION: lineage-23.0
 
     steps:
     - uses: actions/checkout@v4
@@ -65,7 +66,7 @@ jobs:
     - name: Download kernel source
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone --recursive https://github.com/LineageOS/android_kernel_oneplus_sm8250 -b lineage-23.0 android-kernel --depth=1
+        git clone --recursive https://github.com/LineageOS/android_kernel_oneplus_sm8250 -b ${{ env.Lineage_VERSION }} android-kernel --depth=1
 
     - name: Set up rsuntk KernelSU
       run: |
@@ -127,7 +128,7 @@ jobs:
       if: ${{ env.CHECK_IMAGE == 'true' }}
       uses: actions/upload-artifact@v4
       with:
-        name: AK3-LineageOS-23.0-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}
+        name: AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
     
     - name: Zip files
@@ -135,7 +136,7 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/arm64/boot
         zip $GITHUB_WORKSPACE/Image.zip Image
         cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
-        zip -r $GITHUB_WORKSPACE/AK3-LineageOS-23.0-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
+        zip -r $GITHUB_WORKSPACE/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
 
     - name: Send AnyKernel3 to Telegram
       env:
@@ -145,7 +146,7 @@ jobs:
         caption2="\
         <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - ${{ env.KSUVER }}</a></blockquote>
         
-        ROM:<blockquote><b>LineageOS 23.0</b></blockquote>
+        ROM:<blockquote><b>${{ env.Lineage_VERSION }}</b></blockquote>
         Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T | OnePlus 9R</blockquote>
         Kernel Version:<blockquote>${{ env.KERNEL_VERSION }}</blockquote>
         Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
@@ -162,5 +163,5 @@ jobs:
             {type: "document", media: $media2, caption: $caption2, parse_mode: "HTML"}]')
         curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
             -F "media=$media" \
-            -F anykernel3="@$GITHUB_WORKSPACE/AK3-LineageOS-23.0-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" \
+            -F anykernel3="@$GITHUB_WORKSPACE/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" \
             -F Image="@$GITHUB_WORKSPACE/Image.zip"
