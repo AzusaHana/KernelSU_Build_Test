@@ -16,7 +16,7 @@ jobs:
       Lineage_VERSION: lineage-23.0
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     
     - name: Set swap to 10G
       uses: pierotofy/set-swap-space@master
@@ -33,7 +33,7 @@ jobs:
 
     - name: Cache Clang toolchain
       id: cache-clang
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ${{ github.workspace }}/kernel_workspace/clang-aosp
         key: ${{ env.CLANG_VERSION }}
@@ -119,14 +119,14 @@ jobs:
 
     - name: Upload Image
       if: ${{ env.CHECK_IMAGE == 'true' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: Image
         path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
 
     - name: Upload AnyKernel3
       if: ${{ env.CHECK_IMAGE == 'true' }}
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v6
       with:
         name: AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}
         path: kernel_workspace/AnyKernel3/*
