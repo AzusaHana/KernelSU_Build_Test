@@ -11,7 +11,7 @@ env:
 
 jobs:
   build:
-    name: Build Kernel (${ { matrix.ks } })
+    name: Build Kernel (${{ matrix.ks }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -66,76 +66,55 @@ jobs:
           https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/${GCC_TAG}.tar.gz
         tar -C gcc-64 -zxvf gcc-aarch64.tar.gz
 
-    - name: Download kernel source (clone once per job)
+    - name: Download kernel source
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone --recursive https://github.com/LineageOS/android_kernel_oneplus_sm8250 -b ${{ env.Lineage_VERSION }} android-kernel --depth=1
-        cp -r android-kernel android-kernel-xxksu
 
-    - name: Set variables for kernel su type
+    - name: Set up KernelSU (rsuntk/backslashxx)
       run: |
-        echo "KSU_TYPE=${{ matrix.ks }}" >> $GITHUB_ENV
+        cd kernel_workspace/android-kernel
 
-    - name: Set up KernelSU (rsuntk/backslashxx) and patch
-      run: |
-        set -e
-        cd $GITHUB_WORKSPACE/kernel_workspace
-        if [ "${KSU_TYPE}" = "rsuntk" ]; then
-          cd android-kernel
-          curl -LSs "https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh" | bash -s main
+        if [ "${{ matrix.ks }}" = "rsuntk" ]; then
+          curl -LSs https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh | bash -s main
           bash $GITHUB_WORKSPACE/patches/kernel-4.19_5.4-patch.sh || true
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
-          KSU_VERSION=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 30000)
-          echo "KSUVER=$KSU_VERSION" >> $GITHUB_ENV
-          cd scripts
-          sed -i 's/ -dirty//g' setlocalversion
+          KSUVER=$(cd KernelSU && expr $(git rev-list --count HEAD) + 30000)
+          echo "KSUVER=$KSUVER" >> $GITHUB_ENV
         else
-          cd android-kernel-xxksu
-          curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh" | bash -s master
+          curl -LSs https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh | bash -s master
           echo "CONFIG_KSU_TAMPER_SYSCALL_TABLE=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
-          OFFSET=$(grep -E "30000 \+ commitCount - [0-9]+" KernelSU/manager/build.gradle.kts | sed -E 's/.*- ([0-9]+)/\1/' || echo 0)
-          KSU_VERSION_XX=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 30000 - ${OFFSET})
-          echo "KSUVERXX=$KSU_VERSION_XX" >> $GITHUB_ENV
-          cd scripts
-          sed -i 's/ -dirty//g' setlocalversion
+          OFFSET=$(grep -E "30000 \+ commitCount - [0-9]+" KernelSU/manager/build.gradle.kts | sed -E 's/.*- ([0-9]+)/\1/')
+          KSUVERXX=$(cd KernelSU && expr $(git rev-list --count HEAD) + 30000 - $OFFSET)
+          echo "KSUVERXX=$KSUVERXX" >> $GITHUB_ENV
         fi
+
+        sed -i 's/ -dirty//g' scripts/setlocalversion
 
     - name: Build kernel (${{ matrix.ks }})
       run: |
-        set -e
-        if [ "${KSU_TYPE}" = "rsuntk" ]; then
-          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
-        else
-          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel-xxksu
-        fi
-
+        cd kernel_workspace/android-kernel
         export ARCH=arm64
         export SUBARCH=arm64
         export BRAND_SHOW_FLAG=oneplus
         export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin:$PATH
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+
         BA_CMD="CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android-"
         EX_CMD="LD=ld.lld LLVM=1 LLVM_IAS=1"
         DEFCONFIG="vendor/kona-perf_defconfig vendor/debugfs.config vendor/oplus.config"
-        make O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD $DEFCONFIG
-        make -j$(nproc --all) O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD
 
-    - name: Check kernel output file
+        make O=out CC=clang $BA_CMD $EX_CMD $DEFCONFIG
+        make -j$(nproc --all) O=out CC=clang $BA_CMD $EX_CMD
+
+    - name: Check kernel output
       run: |
-        set -e
-        if [ "${KSU_TYPE}" = "rsuntk" ]; then
-          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out
-        else
-          cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel-xxksu/out
-        fi
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out
 
         if [ -f arch/arm64/boot/Image ]; then
           echo "CHECK_IMAGE=true" >> $GITHUB_ENV
-          if [ -f include/config/kernel.release ]; then
-            KERNEL_VERSION=$(cat include/config/kernel.release)
-            echo "KERNEL_VERSION=$KERNEL_VERSION" >> $GITHUB_ENV
-          fi
+          echo "KERNEL_VERSION=$(cat include/config/kernel.release)" >> $GITHUB_ENV
         else
           echo "Kernel output file is empty"
           exit 1
@@ -143,44 +122,50 @@ jobs:
 
     - name: Prepare AnyKernel3 and package
       run: |
-        set -e
-        cd $GITHUB_WORKSPACE/kernel_workspace
-        if [ ! -d AnyKernel3 ]; then
-          git clone https://github.com/osm0sis/AnyKernel3 --depth=1 AnyKernel3
-          sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh || true
-          sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' AnyKernel3/anykernel.sh || true
-          sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh || true
-        fi
+        cd kernel_workspace
+        git clone --depth=1 https://github.com/osm0sis/AnyKernel3
+        sed -i 's/do.devicecheck=1/do.devicecheck=0/g' AnyKernel3/anykernel.sh
+        sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
 
-        if [ "${KSU_TYPE}" = "rsuntk" ]; then
-          cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
-          ZIPNAME=$GITHUB_WORKSPACE/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_${{ env.KSUVER }}.zip
+        cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
+
+        if [ "${{ matrix.ks }}" = "rsuntk" ]; then
+          zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_${{ env.KSUVER }}.zip AnyKernel3/*
         else
-          cp android-kernel-xxksu/out/arch/arm64/boot/Image AnyKernel3/
-          ZIPNAME=$GITHUB_WORKSPACE/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ env.KSUVERXX }}.zip
+          zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ env.KSUVERXX }}.zip AnyKernel3/*
         fi
-
-        cd AnyKernel3
-        rm -rf .git* README.md || true
-        zip -r "$ZIPNAME" ./*
 
     - name: Upload Image artifact
-      if: env.CHECK_IMAGE != 'false'
+      if: env.CHECK_IMAGE == 'true'
       uses: actions/upload-artifact@v6
       with:
         name: Image-${{ matrix.ks }}
-        path: |
-          kernel_workspace/android-kernel/out/arch/arm64/boot/Image
-          kernel_workspace/android-kernel-xxksu/out/arch/arm64/boot/Image
+        path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
 
     - name: Upload AnyKernel3 ZIP
       uses: actions/upload-artifact@v6
       with:
         name: AK3-${{ matrix.ks }}
-        path: ${{ github.workspace }}/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-${{ matrix.ks }}_KSU_*.zip
+        path: ${{ github.workspace }}/kernel_workspace/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-${{ matrix.ks }}_KSU_*.zip
+
+    - name: Save build info
+      run: |
+        cd kernel_workspace
+        {
+          echo "KSUVER=${{ env.KSUVER }}"
+          echo "KSUVERXX=${{ env.KSUVERXX }}"
+          echo "KERNEL_VERSION=${{ env.KERNEL_VERSION }}"
+          echo "BUILD_TIME_1=${{ env.BUILD_TIME_1 }}"
+        } > build-info-${{ matrix.ks }}.txt
+
+    - name: Upload build info
+      uses: actions/upload-artifact@v6
+      with:
+        name: INFO-${{ matrix.ks }}
+        path: kernel_workspace/build-info-${{ matrix.ks }}.txt
 
   notify:
-    name: Send AnyKernel3 to Telegram (after builds)
+    name: Send AnyKernel3 to Telegram
     runs-on: ubuntu-latest
     needs: build
     if: always()
@@ -188,44 +173,30 @@ jobs:
       TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
     steps:
-    - name: Download rsuntk artifact
-      uses: actions/download-artifact@v4
+    - uses: actions/download-artifact@v4
       with:
-        name: AK3-rsuntk
-        path: ./artifacts/rsuntk
-      continue-on-error: true
-
-    - name: Download backslashxx artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: AK3-backslashxx
-        path: ./artifacts/backslashxx
-      continue-on-error: true
+        path: artifacts
 
     - name: Prepare Telegram media and send
       run: |
-        set -e
+        source artifacts/INFO-rsuntk/build-info-rsuntk.txt 2>/dev/null || true
+        source artifacts/INFO-backslashxx/build-info-backslashxx.txt 2>/dev/null || true
 
-        RS_ZIP=$(ls ./artifacts/rsuntk/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_*.zip 2>/dev/null || true)
-        XX_ZIP=$(ls ./artifacts/backslashxx/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_*.zip 2>/dev/null || true)
-
-        if [ -z "$RS_ZIP" ] && [ -z "$XX_ZIP" ]; then
-          echo "No AK3 zip artifacts found; nothing to send."
-          exit 0
-        fi
+        RS_ZIP=$(ls artifacts/AK3-rsuntk/*.zip 2>/dev/null || true)
+        XX_ZIP=$(ls artifacts/AK3-backslashxx/*.zip 2>/dev/null || true)
 
         caption1="\
-        <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - ${{ env.KSUVER }}</a></blockquote>
+        <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - $KSUVER</a></blockquote>
         Manager: <blockquote>https://t.me/rsukrnlsu</blockquote>"
         caption2="\
-        <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU (backslashxx)</b> - ${{ env.KSUVERXX }}</a></blockquote>
-        Manager: <blockquote>https://github.com/backslashxx/KernelSU/releases</blockquote>"
+        <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU (backslashxx)</b> - $KSUVERXX</a></blockquote>
+        Manager: <blockquote>https://github.com/backslashxx/KernelSU/releases</blockquote>
 
         ROM:<blockquote><b>${{ env.Lineage_VERSION }}</b></blockquote>
         Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T | OnePlus 9R</blockquote>
-        Kernel Version:<blockquote>${{ env.KERNEL_VERSION }}</blockquote>
-        Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
-        Change Log:<blockquote>Only Test.</blockquote>
+        Kernel Version:<blockquote>$KERNEL_VERSION</blockquote>
+        Build Time:<blockquote>$BUILD_TIME_1</blockquote>
+        Change Log:<blockquote>Only Test.</blockquote>"
 
         media=$(jq -n \
           --arg media1 "attach://anykernel3" \
