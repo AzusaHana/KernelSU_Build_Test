@@ -67,6 +67,7 @@ jobs:
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone --recursive https://github.com/LineageOS/android_kernel_oneplus_sm8250 -b ${{ env.Lineage_VERSION }} android-kernel --depth=1
+        cp -r android-kernel android-kernel-xxksu
 
     - name: Set up rsuntk KernelSU
       run: |
@@ -117,51 +118,113 @@ jobs:
         cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
         rm -rf AnyKernel3/.git* AnyKernel3/README.md
 
+    - name: Zip AnyKernel3 with rsuntk KernelSU
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
+        zip -r $GITHUB_WORKSPACE/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_${{ env.KSUVER }}.zip ./*
+
     - name: Upload Image
       if: ${{ env.CHECK_IMAGE == 'true' }}
       uses: actions/upload-artifact@v6
       with:
-        name: Image
+        name: Image_rsuntk_KSU
         path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
 
     - name: Upload AnyKernel3
       if: ${{ env.CHECK_IMAGE == 'true' }}
       uses: actions/upload-artifact@v6
       with:
-        name: AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}
+        name: AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_${{ env.KSUVER }}
         path: kernel_workspace/AnyKernel3/*
     
-    - name: Zip files
+    - name: Set up backslashxx KernelSU
       run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out/arch/arm64/boot
-        zip $GITHUB_WORKSPACE/Image.zip Image
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel-xxksu
+        curl -LSs "https://raw.githubusercontent.com/backslashxx/KernelSU/main/kernel/setup.sh" | bash -s master
+        echo "CONFIG_KSU_TAMPER_SYSCALL_TABLE=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
+        OFFSET=$(grep -E "30000 \+ commitCount - [0-9]+" KernelSU/manager/build.gradle.kts | sed -E 's/.*- ([0-9]+)/\1/')
+        KSU_VERSION_XX=$(cd KernelSU && expr $(/usr/bin/git rev-list --count HEAD) + 30000 - $OFFSET)
+        echo "KSUVERXX=$KSU_VERSION_XX" >> $GITHUB_ENV
+        cd scripts
+        sed -i 's/ -dirty//g' setlocalversion
+
+    - name: Build kernel with backslashxx KernelSU
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel-xxksu
+        export ARCH=arm64
+        export SUBARCH=arm64
+        export BRAND_SHOW_FLAG=oneplus
+        export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$GITHUB_WORKSPACE/kernel_workspace/gcc-64/bin:$PATH
+        export KBUILD_BUILD_HOST=Github-Action
+        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        BA_CMD="CLANG_TRIPLE=aarch64-linux-gnu- CROSS_COMPILE=aarch64-linux-android-"
+        EX_CMD="LD=ld.lld LLVM=1 LLVM_IAS=1"
+        DEFCONFIG="vendor/kona-perf_defconfig vendor/debugfs.config vendor/oplus.config"
+        make O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD $DEFCONFIG
+        make -j$(nproc --all) O=out ARCH=arm64 CC=clang $BA_CMD $EX_CMD
+
+    - name: Check a kernel output files with backslashxx KernelSU
+      run: |
+       cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel-xxksu/out
+       if [ -f arch/arm64/boot/Image ]; then
+           echo "CHECK_IMAGE_XXKSU=true" >> $GITHUB_ENV
+       else
+           echo "Kernel output file is empty"
+           exit 1
+       fi
+
+    - name: Make AnyKernel3 with backslashxx KernelSU
+      if: ${{ env.CHECK_IMAGE_XXKSU == 'true' }}
+      run: |
+        cd $GITHUB_WORKSPACE/kernel_workspace
+        cp android-kernel-xxksu/out/arch/arm64/boot/Image AnyKernel3/
+
+    - name: Zip AnyKernel3 with backslashxx KernelSU
+      run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/AnyKernel3
-        zip -r $GITHUB_WORKSPACE/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip ./*
+        zip -r $GITHUB_WORKSPACE/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ env.KSUVERXX }}.zip ./*
+
+    - name: Upload Image
+      if: ${{ env.CHECK_IMAGE_XXKSU == 'true' }}
+      uses: actions/upload-artifact@v6
+      with:
+        name: Image_backslashxx_KSU
+        path: kernel_workspace/android-kernel-xxksu/out/arch/arm64/boot/Image
+
+    - name: Upload AnyKernel3
+      if: ${{ env.CHECK_IMAGE_XXKSU == 'true' }}
+      uses: actions/upload-artifact@v6
+      with:
+        name: AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ env.KSUVERXX }}
+        path: kernel_workspace/AnyKernel3/*
 
     - name: Send AnyKernel3 to Telegram
       env:
         TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
       run: |
-        caption2="\
+        caption1="\
         <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - ${{ env.KSUVER }}</a></blockquote>
+        Manager: <blockquote>https://t.me/rsukrnlsu</blockquote>"
+        caption2="\
+        <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU (backslashxx)</b> - ${{ env.KSUVERXX }}</a></blockquote>
+        Manager: <blockquote>https://github.com/backslashxx/KernelSU/releases</blockquote>"
         
         ROM:<blockquote><b>${{ env.Lineage_VERSION }}</b></blockquote>
         Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T | OnePlus 9R</blockquote>
         Kernel Version:<blockquote>${{ env.KERNEL_VERSION }}</blockquote>
         Build Time:<blockquote>${{ env.BUILD_TIME_1 }}</blockquote>
-        Special Note:
-        <blockquote>The unofficial version is recommended to install an <a href=\"https://github.com/rsuntk/KernelSU/releases\">unofficial manager</a></blockquote>
         Change Log:<blockquote>Only Test.</blockquote>
         
         <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Github Action</a>"
         media=$(jq -n \
           --arg media1 "attach://anykernel3" \
-          --arg media2 "attach://Image" \
+          --arg media2 "attach://anykernel3xx" \
+          --arg caption2 "$caption1" \
           --arg caption2 "$caption2" \
-          '[{type: "document", media: $media1, parse_mode: "HTML"},
+          '[{type: "document", media: $media1, caption: $caption1, parse_mode: "HTML"},
             {type: "document", media: $media2, caption: $caption2, parse_mode: "HTML"}]')
         curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
             -F "media=$media" \
-            -F anykernel3="@$GITHUB_WORKSPACE/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-KSU_${{ env.KSUVER }}-${{ env.BUILD_TIME }}.zip" \
-            -F Image="@$GITHUB_WORKSPACE/Image.zip"
+            -F anykernel3="@$GITHUB_WORKSPACE/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_${{ env.KSUVER }}.zip" \
+            -F anykernel3xx="@$GITHUB_WORKSPACE/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ env.KSUVER }}.zip"
