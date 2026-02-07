@@ -71,7 +71,7 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace
         git clone --recursive https://github.com/LineageOS/android_kernel_oneplus_sm8250 -b ${{ env.Lineage_VERSION }} android-kernel --depth=1
 
-    - name: Set up KernelSU (rsuntk/backslashxx)
+    - name: Set up KernelSU (${{ matrix.ks }})
       run: |
         cd kernel_workspace/android-kernel
 
@@ -79,14 +79,14 @@ jobs:
           curl -LSs https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh | bash -s main
           bash $GITHUB_WORKSPACE/patches/kernel-4.19_5.4-patch.sh || true
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
-          KSUVER=$(cd KernelSU && expr $(git rev-list --count HEAD) + 30000)
-          echo "KSUVER=$KSUVER" >> $GITHUB_ENV
+          RSKSUVER=$(cd KernelSU && expr $(git rev-list --count HEAD) + 30000)
+          echo "RSKSUVER=$RSKSUVER" >> $GITHUB_ENV
         else
           curl -LSs https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh | bash -s master
           echo "CONFIG_KSU_TAMPER_SYSCALL_TABLE=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
           OFFSET=$(grep -E "30000 \+ commitCount - [0-9]+" KernelSU/manager/build.gradle.kts | sed -E 's/.*- ([0-9]+)/\1/')
-          KSUVERXX=$(cd KernelSU && expr $(git rev-list --count HEAD) + 30000 - $OFFSET)
-          echo "KSUVERXX=$KSUVERXX" >> $GITHUB_ENV
+          XXKSUVER=$(cd KernelSU && expr $(git rev-list --count HEAD) + 30000 - $OFFSET)
+          echo "XXKSUVER=$XXKSUVER" >> $GITHUB_ENV
         fi
 
         sed -i 's/ -dirty//g' scripts/setlocalversion
@@ -129,10 +129,11 @@ jobs:
 
         cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
 
+        cd AnyKernel3
         if [ "${{ matrix.ks }}" = "rsuntk" ]; then
-          zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_${{ env.KSUVER }}.zip AnyKernel3/*
+          zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_${{ env.RSKSUVER }}.zip ./*
         else
-          zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ env.KSUVERXX }}.zip AnyKernel3/*
+          zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ env.XXKSUVER }}.zip ./*
         fi
 
     - name: Upload Image artifact
@@ -151,12 +152,17 @@ jobs:
     - name: Save build info
       run: |
         cd kernel_workspace
-        {
-          echo "KSUVER=${{ env.KSUVER }}"
-          echo "KSUVERXX=${{ env.KSUVERXX }}"
-          echo "KERNEL_VERSION=${{ env.KERNEL_VERSION }}"
-          echo "BUILD_TIME_1=${{ env.BUILD_TIME_1 }}"
-        } > build-info-${{ matrix.ks }}.txt
+        if [ "${{ matrix.ks }}" = "rsuntk" ]; then
+          {
+            echo "RSKSUVER=${{ env.RSKSUVER }}"
+            echo "KERNEL_VERSION=${{ env.KERNEL_VERSION }}"
+            echo "BUILD_TIME_1=${{ env.BUILD_TIME_1 }}"
+          } > build-info-${{ matrix.ks }}.txt
+        else
+          {
+            echo "XXKSUVER=${{ env.XXKSUVER }}"
+          } > build-info-${{ matrix.ks }}.txt
+        fi
 
     - name: Upload build info
       uses: actions/upload-artifact@v6
@@ -182,14 +188,14 @@ jobs:
         source artifacts/INFO-rsuntk/build-info-rsuntk.txt 2>/dev/null || true
         source artifacts/INFO-backslashxx/build-info-backslashxx.txt 2>/dev/null || true
 
-        RS_ZIP=$(ls artifacts/AK3-rsuntk/*.zip 2>/dev/null || true)
-        XX_ZIP=$(ls artifacts/AK3-backslashxx/*.zip 2>/dev/null || true)
+        RS_AK3=$(ls artifacts/AK3-rsuntk/*.zip 2>/dev/null || true)
+        XX_AK3=$(ls artifacts/AK3-backslashxx/*.zip 2>/dev/null || true)
 
         caption1="\
-        <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - $KSUVER</a></blockquote>
+        <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - $RSKSUVER</a></blockquote>
         Manager: <blockquote>https://t.me/rsukrnlsu</blockquote>"
         caption2="\
-        <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU (backslashxx)</b> - $KSUVERXX</a></blockquote>
+        <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU (backslashxx)</b> - $XXKSUVER</a></blockquote>
         Manager: <blockquote>https://github.com/backslashxx/KernelSU/releases</blockquote>
 
         ROM:<blockquote><b>${{ env.Lineage_VERSION }}</b></blockquote>
@@ -199,8 +205,8 @@ jobs:
         Change Log:<blockquote>Only Test.</blockquote>"
 
         media=$(jq -n \
-          --arg media1 "attach://anykernel3" \
-          --arg media2 "attach://anykernel3xx" \
+          --arg media1 "attach://rsak3" \
+          --arg media2 "attach://xxak3" \
           --arg caption1 "$caption1" \
           --arg caption2 "$caption2" \
           '[{type: "document", media: $media1, caption: $caption1, parse_mode: "HTML"},
@@ -208,5 +214,5 @@ jobs:
 
           curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
             -F "media=$media" \
-            -F anykernel3="@$RS_ZIP" \
-            -F anykernel3xx="@$XX_ZIP"
+            -F rsak3="@$RS_AK3" \
+            -F xxak3="@$XX_AK3"
