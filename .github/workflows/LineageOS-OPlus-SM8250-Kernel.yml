@@ -84,8 +84,7 @@ jobs:
         else
           curl -LSs https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh | bash -s master
           echo "CONFIG_KSU_TAMPER_SYSCALL_TABLE=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
-          OFFSET=$(grep -E "30000 \+ commitCount - [0-9]+" KernelSU/manager/build.gradle.kts | sed -E 's/.*- ([0-9]+)/\1/')
-          XXKSUVER=$(cd KernelSU && expr $(git rev-list --count HEAD) + 30000 - $OFFSET)
+          XXKSUVER=$(grep -oP 'KSU_VERSION\s*=\s*\K\d+' KernelSU/kernel/Makefile | tail -n1)
           echo "XXKSUVER=$XXKSUVER" >> $GITHUB_ENV
         fi
 
