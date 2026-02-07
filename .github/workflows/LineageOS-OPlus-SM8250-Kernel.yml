@@ -188,8 +188,8 @@ jobs:
         source artifacts/INFO-rsuntk/build-info-rsuntk.txt 2>/dev/null || true
         source artifacts/INFO-backslashxx/build-info-backslashxx.txt 2>/dev/null || true
 
-        RS_AK3=$(ls artifacts/AK3-rsuntk/*.zip 2>/dev/null || true)
-        XX_AK3=$(ls artifacts/AK3-backslashxx/*.zip 2>/dev/null || true)
+        RS_ZIP=$(ls artifacts/AK3-rsuntk/*.zip 2>/dev/null || true)
+        XX_ZIP=$(ls artifacts/AK3-backslashxx/*.zip 2>/dev/null || true)
 
         caption1="\
         <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - $RSKSUVER</a></blockquote>
@@ -205,8 +205,8 @@ jobs:
         Change Log:<blockquote>Only Test.</blockquote>"
 
         media=$(jq -n \
-          --arg media1 "attach://rsak3" \
-          --arg media2 "attach://xxak3" \
+          --arg media1 "attach://anykernel3" \
+          --arg media2 "attach://anykernel3xx" \
           --arg caption1 "$caption1" \
           --arg caption2 "$caption2" \
           '[{type: "document", media: $media1, caption: $caption1, parse_mode: "HTML"},
@@ -214,5 +214,5 @@ jobs:
 
           curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
             -F "media=$media" \
-            -F rsak3="@$RS_AK3" \
-            -F xxak3="@$XX_AK3"
+            -F anykernel3="@$RS_ZIP" \
+            -F anykernel3xx="@$XX_ZIP"
