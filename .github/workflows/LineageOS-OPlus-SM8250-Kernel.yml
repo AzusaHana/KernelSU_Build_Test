@@ -202,7 +202,9 @@ jobs:
         Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T | OnePlus 9R</blockquote>
         Kernel Version:<blockquote>$KERNEL_VERSION</blockquote>
         Build Time:<blockquote>$BUILD_TIME_1</blockquote>
-        Change Log:<blockquote>Only Test.</blockquote>"
+        Change Log:<blockquote>Only Test.</blockquote>
+        
+        <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Github Action</a>"
 
         media=$(jq -n \
           --arg media1 "attach://rsak3" \
