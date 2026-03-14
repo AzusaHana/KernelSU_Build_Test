@@ -59,7 +59,7 @@ jobs:
         cd kernel_workspace/android-kernel
 
         if [ "${{ matrix.ks }}" = "rsuntk" ]; then
-          curl -LSs https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh | bash -s main
+          curl -LSs https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh | bash -s on_rebase
           bash $GITHUB_WORKSPACE/patches/kernel-4.19_5.4-patch.sh || true
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
           RSKSUVER=$(cd KernelSU && expr $(git rev-list --count HEAD) + 30000)
@@ -175,8 +175,8 @@ jobs:
         XX_AK3=$(ls artifacts/AK3-backslashxx/*.zip 2>/dev/null || true)
 
         caption1="\
-        <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - $RSKSUVER</a></blockquote>
-        Manager: <blockquote>https://t.me/rsukrnlsu</blockquote>"
+        <blockquote><a href=\"https://github.com/rsuntk/KernelSU/tree/on_rebase\"><b>Unofficial KernelSU (rsuntk on_rebase)</b> - $RSKSUVER</a></blockquote>
+        Manager: Use Official KSU / MKSU manager for temporary"
         caption2="\
         <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU (backslashxx)</b> - $XXKSUVER</a></blockquote>
         Manager: <blockquote>https://github.com/backslashxx/KernelSU/releases</blockquote>
