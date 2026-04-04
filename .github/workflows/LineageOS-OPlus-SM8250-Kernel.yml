@@ -60,9 +60,9 @@ jobs:
 
         if [ "${{ matrix.ks }}" = "rsuntk" ]; then
           curl -LSs https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh | bash -s main
-          bash $GITHUB_WORKSPACE/patches/kernel-4.19_5.4-patch.sh || true
+          bash $GITHUB_WORKSPACE/patches/kernel-4.19-patch.sh || true
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
-          RSKSUVER=$(cd KernelSU && expr $(git rev-list --count HEAD) + 30000)
+          RSKSUVER=$(cd KernelSU && expr $(git rev-list --count HEAD) + 29971)
           echo "RSKSUVER=$RSKSUVER" >> $GITHUB_ENV
         else
           curl -LSs https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh | bash -s master
@@ -176,7 +176,8 @@ jobs:
 
         caption1="\
         <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - $RSKSUVER</a></blockquote>
-        Manager: <blockquote>Use Official KSU / MKSU manager for temporary</blockquote>"
+        Manager: <blockquote>https://t.me/rsukrnlsu</blockquote>
+        "
         caption2="\
         <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU (backslashxx)</b> - $XXKSUVER</a></blockquote>
         Manager: <blockquote>https://github.com/backslashxx/KernelSU/releases</blockquote>
