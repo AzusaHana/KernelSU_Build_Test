@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ks: [rsuntk, backslashxx]
+        ks: [rsuntk, backslashxx, next]
 
     steps:
     - uses: actions/checkout@v6
@@ -64,11 +64,17 @@ jobs:
           echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
           RSKSUVER=$(cd KernelSU && expr $(git rev-list --count HEAD) + 29971)
           echo "RSKSUVER=$RSKSUVER" >> $GITHUB_ENV
-        else
+        elif [ "${{ matrix.ks }}" = "backslashxx" ]; then
           curl -LSs https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh | bash -s master
           echo "CONFIG_KSU_TAMPER_SYSCALL_TABLE=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
           XXKSUVER=$(grep -oP 'KSU_VERSION\s*=\s*\K\d+' KernelSU/kernel/Makefile | tail -n1)
           echo "XXKSUVER=$XXKSUVER" >> $GITHUB_ENV
+        elif [ "${{ matrix.ks }}" = "next" ]; then
+          curl -LSs "https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/next/kernel/setup.sh" | bash -s legacy
+          echo "CONFIG_KPROBES=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
+          echo "CONFIG_KPROBE_EVENTS=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
+          echo "CONFIG_KSU_KPROBE_HOOKS=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
+          echo "CONFIG_KSU=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
         fi
 
         sed -i 's/ -dirty//g' scripts/setlocalversion
@@ -115,8 +121,10 @@ jobs:
         cd AnyKernel3
         if [ "${{ matrix.ks }}" = "rsuntk" ]; then
           zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_${{ env.RSKSUVER }}.zip ./*
-        else
+        elif [ "${{ matrix.ks }}" = "backslashxx" ]; then
           zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ env.XXKSUVER }}.zip ./*
+        elif [ "${{ matrix.ks }}" = "next" ]; then
+          zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250_KSU_Next.zip ./*
         fi
 
     - name: Upload Image artifact
@@ -141,7 +149,7 @@ jobs:
             echo "KERNEL_VERSION=${{ env.KERNEL_VERSION }}"
             echo "BUILD_TIME_1=${{ env.BUILD_TIME_1 }}"
           } > build-info-${{ matrix.ks }}.txt
-        else
+        elif [ "${{ matrix.ks }}" = "backslashxx" ]; then
           {
             echo "XXKSUVER=${{ env.XXKSUVER }}"
           } > build-info-${{ matrix.ks }}.txt
