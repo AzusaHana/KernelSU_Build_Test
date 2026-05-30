@@ -114,9 +114,9 @@ jobs:
 
         cd AnyKernel3
         if [ "${{ matrix.ks }}" = "rsuntk" ]; then
-          zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_${{ env.RSKSUVER }}.zip ./*
+          7z a -tzip -mx=9 -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_${{ env.RSKSUVER }}.zip ./*
         else
-          zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ env.XXKSUVER }}.zip ./*
+          7z a -tzip -mx=9 -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ env.XXKSUVER }}.zip ./*
         fi
 
     - name: Upload Image artifact
