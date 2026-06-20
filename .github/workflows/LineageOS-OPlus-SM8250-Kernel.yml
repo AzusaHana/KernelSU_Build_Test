@@ -66,7 +66,7 @@ jobs:
           echo "RSKSUVER=$RSKSUVER" >> $GITHUB_ENV
         else
           curl -LSs https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh | bash -s master
-          echo "CONFIG_KSU_TAMPER_SYSCALL_TABLE=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
+          bash $GITHUB_WORKSPACE/patches/kernel-4.19-patch-v2.2.sh || true
           XXKSUVER=$(grep -oP 'KSU_VERSION\s*=\s*\K\d+' KernelSU/kernel/Makefile | tail -n1)
           echo "XXKSUVER=$XXKSUVER" >> $GITHUB_ENV
         fi
