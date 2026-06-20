@@ -192,13 +192,18 @@ jobs:
 
         media=$(jq -n \
           --arg media1 "attach://rsak3" \
-          --arg media2 "attach://xxak3" \
           --arg caption1 "$caption1" \
-          --arg caption2 "$caption2" \
-          '[{type: "document", media: $media1, caption: $caption1, parse_mode: "HTML"},
-            {type: "document", media: $media2, caption: $caption2, parse_mode: "HTML"}]')
+          '[{type: "document", media: $media1, caption: $caption1, parse_mode: "HTML"}]')
 
           curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
             -F "media=$media" \
-            -F rsak3="@$RS_AK3" \
+            -F rsak3="@$RS_AK3"
+            
+        media=$(jq -n \
+          --arg media2 "attach://xxak3" \
+          --arg caption2 "$caption2" \
+          '[{type: "document", media: $media2, caption: $caption2, parse_mode: "HTML"}]')
+
+          curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
+            -F "media=$media" \
             -F xxak3="@$XX_AK3"
