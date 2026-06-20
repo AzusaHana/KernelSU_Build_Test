@@ -24,15 +24,19 @@ extern int ksu_handle_execveat(int *fd, struct filename **filename_ptr,\
 				void *argv, void *envp, int *flags);\
 #endif' fs/exec.c
 
-        sed -i '/struct user_arg_ptr envp = { .ptr.native = __envp };/a\
+        sed -i '/^int do_execve(struct filename \*filename,/,/^}$/ {
+            /return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);/i\
 #ifdef CONFIG_KSU\
 	ksu_handle_execveat((int *)AT_FDCWD, &filename, &argv, &envp, 0);\
-#endif' fs/exec.c
+#endif
+        }' fs/exec.c
 
-        sed -i '/struct user_arg_ptr envp = { .is_compat = true, .ptr.compat = __envp };/a\
+        sed -i '/^static int compat_do_execve(struct filename \*filename,/,/^}$/ {
+            /return do_execveat_common(AT_FDCWD, filename, argv, envp, 0);/i\
 #ifdef CONFIG_KSU\
 	ksu_handle_execveat((int *)AT_FDCWD, &filename, &argv, &envp, 0);\
-#endif' fs/exec.c
+#endif
+        }' fs/exec.c
         ;;
 
     # ==================== fs/open.c ====================
