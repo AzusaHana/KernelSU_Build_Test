@@ -78,7 +78,6 @@ jobs:
         cd kernel_workspace/android-kernel
         export ARCH=arm64
         export SUBARCH=arm64
-        export BRAND_SHOW_FLAG=oneplus
         export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
