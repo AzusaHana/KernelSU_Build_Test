@@ -6,7 +6,7 @@ on:
 env:
   TZ: Asia/Shanghai
   CLANG_VERSION: clang-r547379
-  Lineage_VERSION: lineage-23.2
+  Lineage_VERSION: lineage-24.0
 
 jobs:
   build:
