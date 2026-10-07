@@ -75,6 +75,7 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
+        git revert --no-edit 9cc8986cd61645ea6af75599bb9814c8a8e0eef1
         git revert --no-edit b3bb82fdc68722de7148472c7deccb6ddae0500e
         git revert --no-edit 386fa8b6576780ac231229aa5ffba27904f6b98d
         git revert --no-edit f4805a01eb2ca795de4b75c4463e6af23eeea7c7
