@@ -10,12 +10,15 @@ env:
 
 jobs:
   build:
-    name: Build Kernel (${{ matrix.ks }})
+    name: Build Kernel
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        ks: [rsuntk, backslashxx]
+
+    outputs:
+      ak3_artifact_id: ${{ steps.upload-ak3.outputs.artifact-id }}
+      ak3_artifact_name: ${{ steps.metadata.outputs.ak3_artifact_name }}
+      ksu_version: ${{ steps.metadata.outputs.ksu_version }}
+      kernel_version: ${{ steps.metadata.outputs.kernel_version }}
+      build_time: ${{ steps.metadata.outputs.build_time }}
 
     steps:
     - uses: actions/checkout@v6
@@ -27,11 +30,32 @@ jobs:
 
     - name: Setup build kernel environment
       run: |
-        echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%y%m%d")" >> $GITHUB_ENV
-        echo "BUILD_TIME_1=$(TZ=Asia/Shanghai date "+%Y-%m-%d")" >> $GITHUB_ENV
         sudo apt-get update
-        sudo apt-get install -y git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib bzip2 libbz2-dev liblz4-tool make squashfs-tools dpkg-dev libssl-dev python3 bc libc6-dev-i386 libncurses5-dev
-        mkdir -p $GITHUB_WORKSPACE/kernel_workspace
+        sudo apt-get install -y \
+          git \
+          ccache \
+          automake \
+          flex \
+          lzop \
+          bison \
+          gperf \
+          build-essential \
+          curl \
+          zlib1g-dev \
+          g++-multilib \
+          bzip2 \
+          libbz2-dev \
+          liblz4-tool \
+          make \
+          squashfs-tools \
+          dpkg-dev \
+          libssl-dev \
+          python3 \
+          bc \
+          libc6-dev-i386 \
+          libncurses5-dev
+
+        mkdir -p "$GITHUB_WORKSPACE/kernel_workspace"
 
     - name: Cache Clang toolchain
       id: cache-clang
@@ -43,44 +67,50 @@ jobs:
     - name: Download & extract Clang-aosp (if cache miss)
       if: steps.cache-clang.outputs.cache-hit != 'true'
       run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace
+        cd "$GITHUB_WORKSPACE/kernel_workspace"
+
         mkdir -p clang-aosp
-        wget -O ${CLANG_VERSION}.tar.gz \
-          https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/${CLANG_VERSION}.tar.gz
-        tar -C clang-aosp -zxvf ${CLANG_VERSION}.tar.gz
+
+        wget -O "${CLANG_VERSION}.tar.gz" \
+          "https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/${CLANG_VERSION}.tar.gz"
+
+        tar -C clang-aosp -zxvf "${CLANG_VERSION}.tar.gz"
+
+        rm -f "${CLANG_VERSION}.tar.gz"
 
     - name: Download kernel source
       run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace
-        git clone --recursive https://github.com/LineageOS/android_kernel_oneplus_sm8250 -b ${{ env.Lineage_VERSION }} android-kernel --depth=1
+        cd "$GITHUB_WORKSPACE/kernel_workspace"
 
-    - name: Set up KernelSU (${{ matrix.ks }})
+        git clone \
+          --recursive \
+          --depth=1 \
+          -b "${{ env.Lineage_VERSION }}" \
+          https://github.com/LineageOS/android_kernel_oneplus_sm8250 \
+          android-kernel
+
+    - name: Set up KernelSU (backslashxx)
       run: |
-        cd kernel_workspace/android-kernel
+        cd "$GITHUB_WORKSPACE/kernel_workspace/android-kernel"
 
-        if [ "${{ matrix.ks }}" = "rsuntk" ]; then
-          curl -LSs https://raw.githubusercontent.com/rsuntk/KernelSU/main/kernel/setup.sh | bash -s main
-          bash $GITHUB_WORKSPACE/patches/kernel-4.19-patch.sh || true
-          echo "CONFIG_KSU_MANUAL_HOOK=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
-          RSKSUVER=$(cd KernelSU && expr $(git rev-list --count HEAD) + 29971)
-          echo "RSKSUVER=$RSKSUVER" >> $GITHUB_ENV
-        else
-          curl -LSs https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh | bash -s master
-          echo "CONFIG_KSU_HACK_ARM64_BRANCH_LINK=y" >> arch/arm64/configs/vendor/kona-perf_defconfig
-          XXKSUVER=$(grep -oP 'KSU_VERSION\s*=\s*\K\d+' KernelSU/kernel/Makefile | tail -n1)
-          echo "XXKSUVER=$XXKSUVER" >> $GITHUB_ENV
-        fi
+        curl -LSs \
+          https://raw.githubusercontent.com/backslashxx/KernelSU/master/kernel/setup.sh \
+          | bash -s master
+
+        echo "CONFIG_KSU_HACK_ARM64_BRANCH_LINK=y" \
+          >> arch/arm64/configs/vendor/kona-perf_defconfig
 
         sed -i 's/ -dirty//g' scripts/setlocalversion
 
-    - name: Build kernel (${{ matrix.ks }})
+    - name: Build kernel
       run: |
         cd kernel_workspace/android-kernel
+
         export ARCH=arm64
         export SUBARCH=arm64
-        export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH
+        export PATH="$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH"
         export KBUILD_BUILD_HOST=Github-Action
-        export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
+        export KBUILD_BUILD_USER="$(echo "${{ github.actor }}" | tr '[:upper:]' '[:lower:]')"
 
         BA_CMD="CLANG_TRIPLE=aarch64-linux-gnu-"
         EX_CMD="LD=ld.lld LLVM=1"
@@ -89,17 +119,25 @@ jobs:
         make O=out CC=clang $BA_CMD $EX_CMD $DEFCONFIG
         make -j$(nproc --all) O=out CC=clang $BA_CMD $EX_CMD
 
-    - name: Check kernel output
+    - name: Collect build metadata
+      id: metadata
       run: |
-        cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel/out
+        cd "$GITHUB_WORKSPACE/kernel_workspace/android-kernel"
 
-        if [ -f arch/arm64/boot/Image ]; then
-          echo "CHECK_IMAGE=true" >> $GITHUB_ENV
-          echo "KERNEL_VERSION=$(cat include/config/kernel.release)" >> $GITHUB_ENV
-        else
-          echo "Kernel output file is empty"
-          exit 1
-        fi
+        KSU_VERSION="$(grep -oP 'KSU_VERSION\s*=\s*\K\d+' KernelSU/kernel/Makefile | tail -n1)"
+        KERNEL_VERSION="$(cat out/include/config/kernel.release)"
+        BUILD_TIME="$(TZ=Asia/Shanghai date '+%Y-%m-%d')"
+        AK3_ARTIFACT_NAME="AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${KSU_VERSION}"
+
+        echo "KSU_VERSION=$KSU_VERSION"
+        echo "KERNEL_VERSION=$KERNEL_VERSION"
+        echo "BUILD_TIME=$BUILD_TIME"
+        echo "AK3_ARTIFACT_NAME=$AK3_ARTIFACT_NAME"
+
+        echo "ksu_version=$KSU_VERSION" >> "$GITHUB_OUTPUT"
+        echo "kernel_version=$KERNEL_VERSION" >> "$GITHUB_OUTPUT"
+        echo "build_time=$BUILD_TIME" >> "$GITHUB_OUTPUT"
+        echo "ak3_artifact_name=$AK3_ARTIFACT_NAME" >> "$GITHUB_OUTPUT"
 
     - name: Prepare AnyKernel3 and package
       run: |
@@ -109,75 +147,64 @@ jobs:
         sed -i 's!BLOCK=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;!BLOCK=auto;!g' AnyKernel3/anykernel.sh
         sed -i 's/IS_SLOT_DEVICE=0;/IS_SLOT_DEVICE=auto;/g' AnyKernel3/anykernel.sh
         rm -rf AnyKernel3/.git* AnyKernel3/README.md
-        cp android-kernel/out/arch/arm64/boot/Image AnyKernel3/
 
-        cd AnyKernel3
-        if [ "${{ matrix.ks }}" = "rsuntk" ]; then
-          zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-rsuntk_KSU_${{ env.RSKSUVER }}.zip ./*
-        else
-          zip -r AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ env.XXKSUVER }}.zip ./*
-        fi
+        cp \
+          android-kernel/out/arch/arm64/boot/Image \
+          AnyKernel3/Image
 
     - name: Upload Image artifact
-      if: env.CHECK_IMAGE == 'true'
-      uses: actions/upload-artifact@v6
+      uses: actions/upload-artifact@v7
       with:
-        name: Image-${{ matrix.ks }}
-        path: kernel_workspace/android-kernel/out/arch/arm64/boot/Image
+        name: Image-backslashxx
+        path: ${{ github.workspace }}/kernel_workspace/android-kernel/out/arch/arm64/boot/Image
+        if-no-files-found: error
 
-    - name: Upload AnyKernel3 ZIP
-      uses: actions/upload-artifact@v6
+    - name: Upload AnyKernel3 artifact
+      id: upload-ak3
+      uses: actions/upload-artifact@v7
       with:
-        name: AK3-${{ matrix.ks }}
-        path: ${{ github.workspace }}/kernel_workspace/AnyKernel3/AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-${{ matrix.ks }}_KSU_*.zip
-
-    - name: Save build info
-      run: |
-        cd kernel_workspace
-        if [ "${{ matrix.ks }}" = "rsuntk" ]; then
-          {
-            echo "RSKSUVER=${{ env.RSKSUVER }}"
-            echo "KERNEL_VERSION=${{ env.KERNEL_VERSION }}"
-            echo "BUILD_TIME_1=${{ env.BUILD_TIME_1 }}"
-          } > build-info-${{ matrix.ks }}.txt
-        else
-          {
-            echo "XXKSUVER=${{ env.XXKSUVER }}"
-          } > build-info-${{ matrix.ks }}.txt
-        fi
-
-    - name: Upload build info
-      uses: actions/upload-artifact@v6
-      with:
-        name: INFO-${{ matrix.ks }}
-        path: kernel_workspace/build-info-${{ matrix.ks }}.txt
+        name: AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ steps.metadata.outputs.ksu_version }}
+        path: ${{ github.workspace }}/kernel_workspace/AnyKernel3/*
+        if-no-files-found: error
 
   notify:
     name: Send AnyKernel3 to Telegram
     runs-on: ubuntu-latest
     needs: build
-    if: always()
+    if: needs.build.result == 'success'
+
     env:
       TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+      AK3_ARTIFACT_ID: ${{ needs.build.outputs.ak3_artifact_id }}
+      KSU_VERSION: ${{ needs.build.outputs.ksu_version }}
+      KERNEL_VERSION: ${{ needs.build.outputs.kernel_version }}
+      BUILD_TIME: ${{ needs.build.outputs.build_time }}
+  
     steps:
-    - uses: actions/download-artifact@v4
-      with:
-        path: artifacts
+    - name: Download AnyKernel3 artifact
+      run: |
+        set -e
+
+        OUTPUT="$RUNNER_TEMP/${AK3_ARTIFACT_NAME}.zip"
+
+        curl -fL \
+          -H "Accept: application/vnd.github+json" \
+          -H "Authorization: Bearer ${{ github.token }}" \
+          -H "X-GitHub-Api-Version: 2026-03-10" \
+          "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts/${AK3_ARTIFACT_ID}/zip" \
+          -o "$OUTPUT"
+
+        test -s "$OUTPUT"
+
+        echo "AK3 artifact:"
+        ls -lh "$OUTPUT"
+
+        echo "AK3_ZIP=$OUTPUT" >> "$GITHUB_ENV"
 
     - name: Prepare Telegram media and send
       run: |
-        source artifacts/INFO-rsuntk/build-info-rsuntk.txt 2>/dev/null || true
-        source artifacts/INFO-backslashxx/build-info-backslashxx.txt 2>/dev/null || true
-
-        RS_AK3=$(ls artifacts/AK3-rsuntk/*.zip 2>/dev/null || true)
-        XX_AK3=$(ls artifacts/AK3-backslashxx/*.zip 2>/dev/null || true)
-
-        caption1="\
-        <blockquote><a href=\"https://github.com/rsuntk/KernelSU\"><b>Unofficial KernelSU (rsuntk)</b> - $RSKSUVER</a></blockquote>
-        Manager: <blockquote>https://t.me/rsukrnlsu</blockquote>
-        "
-        caption2="\
+        caption="\
         <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU (backslashxx)</b> - $XXKSUVER</a></blockquote>
         Manager: <blockquote>https://github.com/backslashxx/KernelSU/releases</blockquote>
 
@@ -190,19 +217,19 @@ jobs:
         <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Github Action</a>"
 
         media=$(jq -n \
-          --arg media1 "attach://rsak3" \
-          --arg caption1 "$caption1" \
-          '[{type: "document", media: $media1, caption: $caption1, parse_mode: "HTML"}]')
+            --arg media "attach://ak3" \
+            --arg caption "$caption" \
+            '[
+              {
+                type: "document",
+                media: $media,
+                caption: $caption,
+                parse_mode: "HTML"
+              }
+            ]')
 
-          curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
-            -F "media=$media" \
-            -F rsak3="@$RS_AK3"
-            
-        media=$(jq -n \
-          --arg media2 "attach://xxak3" \
-          --arg caption2 "$caption2" \
-          '[{type: "document", media: $media2, caption: $caption2, parse_mode: "HTML"}]')
-
-          curl "https://api.telegram.org/bot$TELEGRAM_TOKEN/sendMediaGroup?chat_id=$TELEGRAM_CHAT_ID" \
-            -F "media=$media" \
-            -F xxak3="@$XX_AK3"
+          curl -fS \
+            "https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMediaGroup" \
+            -F "chat_id=${TELEGRAM_CHAT_ID}" \
+            -F "media=${media}" \
+            -F "ak3=@${AK3_ZIP};filename=${AK3_ARTIFACT_NAME}.zip"
