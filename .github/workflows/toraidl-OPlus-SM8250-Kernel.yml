@@ -46,7 +46,7 @@ jobs:
         cd $GITHUB_WORKSPACE/kernel_workspace
         mkdir -p clang-aosp
         wget -O ${CLANG_VERSION}.tar.gz \
-          https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/main/${CLANG_VERSION}.tar.gz
+          https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/refs/heads/${CLANG_BRANCH}/${CLANG_VERSION}.tar.gz
         tar -C clang-aosp -zxvf ${CLANG_VERSION}.tar.gz
 
     - name: Cache GCC toolchain
