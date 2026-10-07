@@ -19,7 +19,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v6
-    
+
+    - name: Remove unused packages
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: true
+        android: false
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: false
+
     - name: Set swap to 10G
       uses: pierotofy/set-swap-space@master
       with:
