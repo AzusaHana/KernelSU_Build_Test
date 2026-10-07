@@ -23,7 +23,7 @@ jobs:
     - name: Remove unused packages
       uses: jlumbroso/free-disk-space@main
       with:
-        tool-cache: true
+        preinstalled-runtimes: true
         android: false
         dotnet: true
         haskell: true
