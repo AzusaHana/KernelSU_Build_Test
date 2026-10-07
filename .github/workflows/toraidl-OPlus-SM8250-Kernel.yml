@@ -30,7 +30,10 @@ jobs:
         echo "BUILD_TIME=$(TZ=Asia/Shanghai date "+%y%m%d")" >> $GITHUB_ENV
         echo "BUILD_TIME_1=$(TZ=Asia/Shanghai date "+%Y-%m-%d")" >> $GITHUB_ENV
         sudo apt-get update
-        sudo apt-get install -y git ccache automake flex lzop bison gperf build-essential zip curl zlib1g-dev g++-multilib bzip2 libbz2-dev liblz4-tool make squashfs-tools dpkg-dev libssl-dev python3 bc libc6-dev-i386 libncurses5-dev
+        sudo apt-get install -y \
+          git ccache automake flex lzop bison gperf build-essential zip \
+          curl zlib1g-dev g++-multilib bzip2 libbz2-dev liblz4-tool make \
+          squashfs-tools dpkg-dev libssl-dev python3 bc libc6-dev-i386 libncurses5-dev libelf-dev
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
     - name: Cache Clang toolchain
