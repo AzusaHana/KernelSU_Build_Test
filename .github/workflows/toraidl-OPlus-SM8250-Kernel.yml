@@ -46,12 +46,14 @@ jobs:
           curl zlib1g-dev g++-multilib bzip2 libbz2-dev liblz4-tool make \
           squashfs-tools dpkg-dev libssl-dev python3 bc libc6-dev-i386 libncurses5-dev \
           dwarves libelf-dev cmake gcc make libelf-dev libdw-dev libbpf-dev zlib1g-dev
+        echo "===== build pahole ====="
         git clone https://git.kernel.org/pub/scm/devel/pahole/pahole.git
         cd pahole
         mkdir build && cd build
         cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -D__LIB=lib ..
         make -j$(nproc)
         sudo make install
+        sudo ldconfig
         pahole --version
         mkdir -p $GITHUB_WORKSPACE/kernel_workspace
 
