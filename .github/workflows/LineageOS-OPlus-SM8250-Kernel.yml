@@ -163,7 +163,7 @@ jobs:
       id: upload-ak3
       uses: actions/upload-artifact@v7
       with:
-        name: AK3-${{ env.Lineage_VERSION }}-OPlus-SM8250-backslashxx_KSU_${{ steps.metadata.outputs.ksu_version }}
+        name: ${{ steps.metadata.outputs.ak3_artifact_name }}
         path: ${{ github.workspace }}/kernel_workspace/AnyKernel3/*
         if-no-files-found: error
 
@@ -177,6 +177,7 @@ jobs:
       TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
       AK3_ARTIFACT_ID: ${{ needs.build.outputs.ak3_artifact_id }}
+      AK3_ARTIFACT_NAME: ${{ needs.build.outputs.ak3_artifact_name }}
       KSU_VERSION: ${{ needs.build.outputs.ksu_version }}
       KERNEL_VERSION: ${{ needs.build.outputs.kernel_version }}
       BUILD_TIME: ${{ needs.build.outputs.build_time }}
@@ -188,6 +189,11 @@ jobs:
 
         OUTPUT="$RUNNER_TEMP/${AK3_ARTIFACT_NAME}.zip"
 
+        if [ -z "${AK3_ARTIFACT_NAME}" ]; then
+          echo "AK3_ARTIFACT_NAME is empty" >&2
+          exit 1
+        fi
+        
         curl -fL \
           -H "Accept: application/vnd.github+json" \
           -H "Authorization: Bearer ${{ github.token }}" \
@@ -204,14 +210,16 @@ jobs:
 
     - name: Prepare Telegram media and send
       run: |
+        set -e
+        
         caption="\
-        <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU (backslashxx)</b> - $XXKSUVER</a></blockquote>
+        <blockquote><a href=\"https://github.com/backslashxx/KernelSU\"><b>Unofficial KernelSU (backslashxx)</b> - ${KSU_VERSION}</a></blockquote>
         Manager: <blockquote>https://github.com/backslashxx/KernelSU/releases</blockquote>
 
         ROM:<blockquote><b>${{ env.Lineage_VERSION }}</b></blockquote>
         Device:<blockquote>OnePlus 8 | OnePlus 8 Pro | OnePlus 8T | OnePlus 9R</blockquote>
-        Kernel Version:<blockquote>$KERNEL_VERSION</blockquote>
-        Build Time:<blockquote>$BUILD_TIME_1</blockquote>
+        Kernel Version:<blockquote>${KERNEL_VERSION}</blockquote>
+        Build Time:<blockquote>${BUILD_TIME}</blockquote>
         Change Log:<blockquote>Only Test.</blockquote>
         
         <a href=\"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\">Github Action</a>"
